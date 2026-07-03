@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - FP进销存财务系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-wrapper {
+            text-align: center;
+        }
+        .brand {
+            color: #fff;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+        .brand-sub {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 420px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+        }
+        .login-card h2 {
+            text-align: center;
+            margin-bottom: 36px;
+            color: #333;
+            font-size: 22px;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e1e5eb;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            outline: none;
+            background: #f8f9fb;
+        }
+        .form-group input:focus {
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 2px;
+            margin-top: 8px;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .message {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            min-height: 20px;
+        }
+        .message.success { color: #27ae60; }
+        .message.error { color: #e74c3c; }
+        .footer {
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="brand">FP 进销存财务系统</div>
+        <div class="brand-sub">Invoice & Reconciliation Platform</div>
+        <div class="login-card">
+            <h2>🔐 用户登录</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" placeholder="请输入用户名" required autocomplete="username" value="">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" placeholder="请输入密码" required minlength="6" autocomplete="current-password" value="">
+                </div>
+                <button type="submit" class="submit-btn">登 录</button>
+            </form>
+            <div id="message" class="message"></div>
+        </div>
+        <div class="footer">© 2026 FP System v1.0</div>
+    </div>
+
+    <script>
+        // 如果已登录，直接跳转
+        if (localStorage.getItem('fp_token')) {
+            window.location.href = '/dashboard.html';
+        }
+
+        const form = document.getElementById('loginForm');
+        const msgEl = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || password.length < 6) {
+                msgEl.className = 'message error';
+                msgEl.textContent = '请填写用户名且密码不少于6位';
+                return;
+            }
+
+            const submitBtn = form.querySelector('.submit-btn');
+            submitBtn.textContent = '登录中...';
+            submitBtn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await resp.json();
+
+                if (data.code === 0) {
+                    localStorage.setItem('fp_token', data.data.token);
+                    localStorage.setItem('fp_user', JSON.stringify(data.data.user));
+                    msgEl.className = 'message success';
+                    msgEl.textContent = '✅ 登录成功，正在跳转...';
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 500);
+                } else {
+                    msgEl.className = 'message error';
+                    msgEl.textContent = data.message || '登录失败';
+                }
+            } catch (err) {
+                msgEl.className = 'message error';
+                msgEl.textContent = '网络错误，请检查后端服务';
+            } finally {
+                submitBtn.textContent = '登 录';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

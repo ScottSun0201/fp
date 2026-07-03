@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>控制台 - FP进销存财务系统</title>
+    <style>
+        :root { --primary: #667eea; --primary-dark: #5a67d8; --sidebar-bg: #1a1a2e; --sidebar-w: 240px; --header-h: 60px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; color: #333; }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-w); background: var(--sidebar-bg); color: #fff; z-index: 100; overflow-y: auto; }
+        .sidebar-brand { padding: 20px 24px; font-size: 18px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); letter-spacing: 1px; }
+        .sidebar-brand span { color: var(--primary); }
+        .nav-section { padding: 16px 0 8px; }
+        .nav-section-title { padding: 0 24px 8px; font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+        .nav-item { display: flex; align-items: center; padding: 12px 24px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s; font-size: 14px; text-decoration: none; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .nav-item.active { background: var(--primary); color: #fff; }
+        .nav-item .icon { margin-right: 12px; font-size: 18px; width: 24px; text-align: center; }
+        .header { position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: var(--header-h); background: #fff; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 99; }
+        .header-title { font-size: 18px; font-weight: 600; }
+        .header-user { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+        .header-user .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
+        .logout-btn { padding: 6px 16px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; color: #666; transition: all 0.2s; }
+        .logout-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+        .content { margin-left: var(--sidebar-w); margin-top: var(--header-h); padding: 32px; min-height: calc(100vh - var(--header-h)); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        .stat-card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card .label { font-size: 13px; color: #888; margin-bottom: 8px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: #333; }
+        .stat-card .sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+        .stat-card.blue { border-left: 4px solid #667eea; }
+        .stat-card.green { border-left: 4px solid #27ae60; }
+        .stat-card.orange { border-left: 4px solid #f39c12; }
+        .stat-card.red { border-left: 4px solid #e74c3c; }
+        .panel { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .panel-title { font-size: 16px; font-weight: 600; }
+        .btn { padding: 8px 20px; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 16px; font-size: 12px; color: #888; text-transform: uppercase; border-bottom: 2px solid #f0f0f0; }
+        td { padding: 14px 16px; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+        tr:hover { background: #fafbfc; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        .upload-area { border: 2px dashed #ddd; border-radius: 16px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 20px; }
+        .upload-area:hover { border-color: var(--primary); background: #f8f9ff; }
+        .upload-area .icon { font-size: 48px; margin-bottom: 12px; }
+        .upload-area .text { color: #888; font-size: 14px; }
+        .page { display: none; }
+        .page.active { display: block; }
+        @media (max-width: 768px) { .sidebar { display: none; } .header { left: 0; } .content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand"><span>FP</span> 进销存系统</div>
+        <div class="nav-section">
+            <div class="nav-section-title">概览</div>
+            <a class="nav-item active" onclick="showPage('dashboard')" href="javascript:;"><span class="icon">📊</span> 仪表盘</a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">业务管理</div>
+            <a class="nav-item" onclick="showPage('invoices')" href="javascript:;"><span class="icon">📄</span> 发票管理</a>
+            <a class="nav-item" onclick="showPage('statements')" href="javascript:;"><span class="icon">📋</span> 对账单管理</a>
+            <a class="nav-item" onclick="showPage('matching')" href="javascript:;"><span class="icon">🔗</span> 智能匹配</a>
+            <a class="nav-item" onclick="showPage('payments')" href="javascript:;"><span class="icon">💰</span> 回款管理</a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">基础数据</div>
+            <a class="nav-item" onclick="showPage('enterprises')" href="javascript:;"><span class="icon">🏢</span> 企业管理</a>
+            <a class="nav-item" onclick="showPage('materials')" href="javascript:;"><span class="icon">📦</span> 物料管理</a>
+            <a class="nav-item" onclick="showPage('mappings')" href="javascript:;"><span class="icon">🔀</span> 料号映射</a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">系统</div>
+            <a class="nav-item" onclick="showPage('config')" href="javascript:;"><span class="icon">⚙️</span> 系统配置</a>
+            <a class="nav-item" onclick="showPage('audit')" href="javascript:;"><span class="icon">📝</span> 审计日志</a>
+        </div>
+    </div>
+    <div class="header">
+        <div class="header-title" id="pageTitle">仪表盘</div>
+        <div class="header-user">
+            <span id="userName">管理员</span>
+            <div class="avatar" id="userAvatar">A</div>
+            <button class="logout-btn" onclick="logout()">退出</button>
+        </div>
+    </div>
+    <div class="content">
+        <div class="page active" id="page-dashboard">
+            <div class="stats-grid">
+                <div class="stat-card blue"><div class="label">发票总数</div><div class="value" id="stat-invoices">-</div><div class="sub">已录入系统</div></div>
+                <div class="stat-card green"><div class="label">对账单总数</div><div class="value" id="stat-statements">-</div><div class="sub">已录入系统</div></div>
+                <div class="stat-card orange"><div class="label">匹配成功</div><div class="value" id="stat-matched">-</div><div class="sub">已确认匹配</div></div>
+                <div class="stat-card red"><div class="label">异常项</div><div class="value" id="stat-anomalies">-</div><div class="sub">需要人工处理</div></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">📈 系统概况</div><button class="btn btn-primary btn-sm" onclick="loadDashboard()">刷新</button></div>
+                <table><thead><tr><th>指标</th><th>数值</th><th>说明</th></tr></thead><tbody id="dashboardTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-invoices">
+            <div class="upload-area" onclick="document.getElementById('invoiceUpload').click()">
+                <div class="icon">📄</div><div class="text">点击或拖拽上传发票PDF</div>
+                <input type="file" id="invoiceUpload" accept=".pdf" style="display:none" onchange="uploadInvoice(this)">
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">发票列表</div><div><button class="btn btn-primary btn-sm" onclick="exportData('invoices')">📥 导出</button> <button class="btn btn-sm" style="background:#eee;" onclick="loadInvoices()">刷新</button></div></div>
+                <table><thead><tr><th>ID</th><th>发票号码</th><th>日期</th><th>购方</th><th>金额</th><th>税额</th><th>价税合计</th><th>状态</th></tr></thead><tbody id="invoicesTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-statements">
+            <div class="upload-area" onclick="document.getElementById('statementUpload').click()">
+                <div class="icon">📋</div><div class="text">点击或拖拽上传对账单PDF</div>
+                <input type="file" id="statementUpload" accept=".pdf" style="display:none" onchange="uploadStatement(this)">
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">对账单列表</div><div><button class="btn btn-primary btn-sm" onclick="exportData('statements')">📥 导出</button> <button class="btn btn-sm" style="background:#eee;" onclick="loadStatements()">刷新</button></div></div>
+                <table><thead><tr><th>ID</th><th>对账单号</th><th>供应商</th><th>开始日期</th><th>结束日期</th><th>金额</th><th>明细</th><th>状态</th></tr></thead><tbody id="statementsTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-matching">
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">🔗 智能匹配引擎</div><div><button class="btn btn-primary" onclick="runMatch()">▶ 执行匹配</button> <button class="btn btn-sm" style="background:#eee;margin-left:8px;" onclick="loadMatchResults()">刷新</button></div></div>
+                <p style="color:#888;margin-bottom:20px;font-size:14px;">算法：金额40% + 物料35% + 数量15% + 日期10%</p>
+                <table><thead><tr><th>ID</th><th>发票</th><th>对账单</th><th>分数</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody id="matchTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-payments">
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">💰 回款记录</div><button class="btn btn-sm" style="background:#eee;" onclick="loadPayments()">刷新</button></div>
+                <table><thead><tr><th>ID</th><th>日期</th><th>金额</th><th>方式</th><th>备注</th><th>时间</th></tr></thead><tbody id="paymentsTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-enterprises">
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">🏢 企业列表</div><button class="btn btn-sm" style="background:#eee;" onclick="loadEnterprises()">刷新</button></div>
+                <table><thead><tr><th>ID</th><th>名称</th><th>税号</th><th>类型</th><th>联系人</th><th>状态</th></tr></thead><tbody id="enterprisesTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-materials">
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">📦 物料列表</div><button class="btn btn-sm" style="background:#eee;" onclick="loadMaterials()">刷新</button></div>
+                <table><thead><tr><th>ID</th><th>名称</th><th>规格</th><th>单位</th><th>单价</th><th>时间</th></tr></thead><tbody id="materialsTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-mappings">
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">🔀 料号映射</div><button class="btn btn-sm" style="background:#eee;" onclick="loadMappings()">刷新</button></div>
+                <table><thead><tr><th>ID</th><th>内部料号</th><th>供应商料号</th><th>企业</th><th>时间</th></tr></thead><tbody id="mappingsTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-config">
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">⚙️ 系统配置</div><button class="btn btn-sm" style="background:#eee;" onclick="loadConfig()">刷新</button></div>
+                <table><thead><tr><th>配置项</th><th>值</th><th>说明</th></tr></thead><tbody id="configTable"></tbody></table>
+            </div>
+        </div>
+        <div class="page" id="page-audit">
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title">📝 审计日志</div><button class="btn btn-sm" style="background:#eee;" onclick="loadAudit()">刷新</button></div>
+                <table><thead><tr><th>ID</th><th>操作</th><th>模块</th><th>IP</th><th>用户</th><th>时间</th><th>详情</th></tr></thead><tbody id="auditTable"></tbody></table>
+            </div>
+        </div>
+    </div>
+    <script>
+    const token = localStorage.getItem('fp_token');
+    if (!token) { window.location.href = '/login.html'; }
+    const user = JSON.parse(localStorage.getItem('fp_user') || '{}');
+    document.getElementById('userName').textContent = user.display_name || user.username || '管理员';
+    document.getElementById('userAvatar').textContent = (user.display_name || user.username || 'A')[0].toUpperCase();
+    function logout() { localStorage.removeItem('fp_token'); localStorage.removeItem('fp_user'); window.location.href = '/login.html'; }
+    async function api(url, options = {}) {
+        const resp = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, ...(options.headers || {}) } });
+        if (resp.status === 401) { logout(); return; }
+        return resp.json();
+    }
+    function showPage(name) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + name).classList.add('active');
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        const titles = { dashboard:'仪表盘',invoices:'发票管理',statements:'对账单管理',matching:'智能匹配',payments:'回款管理',enterprises:'企业管理',materials:'物料管理',mappings:'料号映射',config:'系统配置',audit:'审计日志' };
+        document.getElementById('pageTitle').textContent = titles[name] || name;
+        const loaders = { dashboard:loadDashboard,invoices:loadInvoices,statements:loadStatements,matching:loadMatchResults,payments:loadPayments,enterprises:loadEnterprises,materials:loadMaterials,mappings:loadMappings,config:loadConfig,audit:loadAudit };
+        if (loaders[name]) loaders[name]();
+    }
+    async function loadDashboard() {
+        const data = await api('/api/dashboard/summary');
+        if (!data || data.code !== 0) return;
+        const d = data.data;
+        document.getElementById('stat-invoices').textContent = d.total_invoices || 0;
+        document.getElementById('stat-statements').textContent = d.total_statements || 0;
+        document.getElementById('stat-matched').textContent = d.matched_pairs || 0;
+        document.getElementById('stat-anomalies').textContent = d.anomalies || 0;
+        const rows = [['发票总数',d.total_invoices||0,'已录入的发票'],['发票总金额','¥'+(d.total_invoice_amount||0).toFixed(2),'价税合计'],['对账单总数',d.total_statements||0,'已录入的对账单'],['对账单总金额','¥'+(d.total_statement_amount||0).toFixed(2),'金额合计'],['已匹配对数',d.matched_pairs||0,'成功匹配'],['待匹配发票',d.unmatched_invoices||0,'未匹配发票'],['待匹配对账单',d.unmatched_statements||0,'未匹配对账单'],['回款笔数',d.total_payments||0,'回款记录'],['回款总额','¥'+(d.total_payment_amount||0).toFixed(2),'累计回款'],['异常项',d.anomalies||0,'需人工核实']];
+        document.getElementById('dashboardTable').innerHTML = rows.map(r => '<tr><td><strong>'+r[0]+'</strong></td><td>'+r[1]+'</td><td style="color:#888">'+r[2]+'</td></tr>').join('');
+    }
+    async function loadInvoices() {
+        const data = await api('/api/invoices');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('invoicesTable').innerHTML = list.length === 0 ? '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:40px;">暂无数据，请上传发票PDF</td></tr>' : list.map(i => '<tr><td>'+i.id+'</td><td>'+(i.invoice_number||'-')+'</td><td>'+(i.invoice_date||'-')+'</td><td>'+(i.buyer_name||'-')+'</td><td>'+(i.amount||0).toFixed(2)+'</td><td>'+(i.tax_amount||0).toFixed(2)+'</td><td><strong>'+(i.total_amount||0).toFixed(2)+'</strong></td><td><span class="badge badge-info">'+(i.status||'待处理')+'</span></td></tr>').join('');
+    }
+    async function uploadInvoice(input) {
+        if (!input.files[0]) return;
+        const fd = new FormData(); fd.append('file', input.files[0]);
+        const resp = await fetch('/api/invoices/upload', { method:'POST', headers:{'Authorization':'Bearer '+token}, body:fd });
+        const data = await resp.json();
+        alert(data.code === 0 ? '上传成功，解析到 '+(data.data?.length||0)+' 条' : '失败：'+data.message);
+        input.value = ''; loadInvoices();
+    }
+    async function loadStatements() {
+        const data = await api('/api/statements');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('statementsTable').innerHTML = list.length === 0 ? '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:40px;">暂无数据</td></tr>' : list.map(s => '<tr><td>'+s.id+'</td><td>'+(s.statement_number||'-')+'</td><td>'+(s.supplier_name||'-')+'</td><td>'+(s.start_date||'-')+'</td><td>'+(s.end_date||'-')+'</td><td><strong>'+(s.total_amount||0).toFixed(2)+'</strong></td><td>'+(s.detail_count||0)+'</td><td><span class="badge badge-info">'+(s.status||'待处理')+'</span></td></tr>').join('');
+    }
+    async function uploadStatement(input) {
+        if (!input.files[0]) return;
+        const fd = new FormData(); fd.append('file', input.files[0]);
+        const resp = await fetch('/api/statements/upload', { method:'POST', headers:{'Authorization':'Bearer '+token}, body:fd });
+        const data = await resp.json();
+        alert(data.code === 0 ? '上传成功' : '失败：'+data.message);
+        input.value = ''; loadStatements();
+    }
+    async function runMatch() {
+        const data = await api('/api/match', { method:'POST', body:JSON.stringify({}) });
+        if (data && data.code === 0) { alert('匹配完成，'+(data.data?.length||0)+' 条结果'); loadMatchResults(); } else { alert('匹配失败：'+(data?.message||'')); }
+    }
+    async function loadMatchResults() {
+        const data = await api('/api/match/results');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('matchTable').innerHTML = list.length === 0 ? '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:40px;">暂无匹配结果</td></tr>' : list.map(m => { const sc=m.match_score||0; const b=sc>=0.8?'badge-success':sc>=0.5?'badge-warning':'badge-danger'; return '<tr><td>'+m.id+'</td><td>发票#'+m.invoice_id+'</td><td>对账单#'+m.statement_id+'</td><td><span class="badge '+b+'">'+(sc*100).toFixed(1)+'%</span></td><td>¥'+(m.matched_amount||0).toFixed(2)+'</td><td><span class="badge badge-info">'+(m.status||'待确认')+'</span></td><td><button class="btn btn-primary btn-sm" onclick="confirmMatch('+m.id+')">确认</button></td></tr>'; }).join('');
+    }
+    async function confirmMatch(id) { const d = await api('/api/match/'+id+'/confirm',{method:'POST'}); if(d&&d.code===0) loadMatchResults(); }
+    async function loadPayments() {
+        const data = await api('/api/payments');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('paymentsTable').innerHTML = list.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:40px;">暂无回款</td></tr>' : list.map(p => '<tr><td>'+p.id+'</td><td>'+(p.payment_date||'-')+'</td><td><strong>¥'+(p.amount||0).toFixed(2)+'</strong></td><td>'+(p.payment_method||'-')+'</td><td>'+(p.remark||'-')+'</td><td>'+(p.created_at||'-')+'</td></tr>').join('');
+    }
+    async function loadEnterprises() {
+        const data = await api('/api/enterprises');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('enterprisesTable').innerHTML = list.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:40px;">暂无数据</td></tr>' : list.map(e => '<tr><td>'+e.id+'</td><td><strong>'+(e.name||'-')+'</strong></td><td>'+(e.tax_number||'-')+'</td><td><span class="badge badge-info">'+(e.type||'-')+'</span></td><td>'+(e.contact_name||'-')+'</td><td><span class="badge badge-success">'+(e.status||'正常')+'</span></td></tr>').join('');
+    }
+    async function loadMaterials() {
+        const data = await api('/api/materials');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('materialsTable').innerHTML = list.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:40px;">暂无数据</td></tr>' : list.map(m => '<tr><td>'+m.id+'</td><td><strong>'+(m.name||'-')+'</strong></td><td>'+(m.spec||'-')+'</td><td>'+(m.unit||'-')+'</td><td>¥'+(m.unit_price||0).toFixed(2)+'</td><td>'+(m.created_at||'-')+'</td></tr>').join('');
+    }
+    async function loadMappings() {
+        const data = await api('/api/material-mappings');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('mappingsTable').innerHTML = list.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:40px;">暂无数据</td></tr>' : list.map(m => '<tr><td>'+m.id+'</td><td>'+(m.internal_code||'-')+'</td><td>'+(m.supplier_code||'-')+'</td><td>'+(m.enterprise_name||'-')+'</td><td>'+(m.created_at||'-')+'</td></tr>').join('');
+    }
+    async function loadConfig() {
+        const data = await api('/api/config');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('configTable').innerHTML = list.length === 0 ? '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:40px;">暂无配置</td></tr>' : list.map(c => '<tr><td><strong>'+(c.config_key||c.key||'-')+'</strong></td><td>'+(c.config_value||c.value||'-')+'</td><td style="color:#888">'+(c.description||c.remark||'-')+'</td></tr>').join('');
+    }
+    async function loadAudit() {
+        const data = await api('/api/audit-logs');
+        if (!data || data.code !== 0) return;
+        const list = data.data || [];
+        document.getElementById('auditTable').innerHTML = list.length === 0 ? '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:40px;">暂无日志</td></tr>' : list.slice(0,50).map(a => '<tr><td>'+a.id+'</td><td><span class="badge badge-info">'+(a.action||'-')+'</span></td><td>'+(a.module||'-')+'</td><td>'+(a.ip||'-')+'</td><td>'+(a.username||'-')+'</td><td>'+(a.created_at||'-')+'</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">'+(a.detail||'-')+'</td></tr>').join('');
+    }
+    function exportData(type) { window.open('/api/export/'+type+'?token='+token,'_blank'); }
+    loadDashboard();
+    </script>
+</body>
+</html>

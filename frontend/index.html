@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FP 进销存财务系统</title>
+<style>
+:root {
+  --primary: #667eea; --primary2: #764ba2; --bg: #f5f7fa;
+  --card: #fff; --text: #333; --text2: #666; --text3: #999;
+  --border: #e8ecf1; --success: #27ae60; --danger: #e74c3c;
+  --warning: #f39c12; --info: #3498db; --radius: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --gradient: linear-gradient(135deg, var(--primary), var(--primary2));
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+.hidden { display:none !important; }
+
+/* === LOGIN === */
+#loginPage { min-height:100vh; display:flex; justify-content:center; align-items:center; background: var(--gradient); }
+.login-card { background:#fff; border-radius:16px; padding:48px 40px; width:400px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+.login-card h2 { text-align:center; margin-bottom:8px; font-size:26px; }
+.login-card .sub { text-align:center; color:var(--text3); margin-bottom:32px; font-size:14px; }
+.form-group { margin-bottom:20px; }
+.form-group label { display:block; margin-bottom:6px; color:var(--text2); font-size:14px; font-weight:500; }
+.form-group input { width:100%; padding:12px 16px; border:2px solid var(--border); border-radius:var(--radius); font-size:15px; outline:none; transition:.3s; }
+.form-group input:focus { border-color:var(--primary); }
+.btn { padding:12px 24px; border:none; border-radius:var(--radius); font-size:14px; font-weight:600; cursor:pointer; transition:.2s; display:inline-flex; align-items:center; gap:6px; }
+.btn:hover { transform:translateY(-1px); }
+.btn-primary { background:var(--gradient); color:#fff; }
+.btn-primary:hover { box-shadow:0 6px 20px rgba(102,126,234,0.4); }
+.btn-success { background:var(--success); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-warning { background:var(--warning); color:#fff; }
+.btn-info { background:var(--info); color:#fff; }
+.btn-outline { background:transparent; border:2px solid var(--primary); color:var(--primary); }
+.btn-sm { padding:6px 14px; font-size:12px; }
+.btn-block { width:100%; justify-content:center; padding:14px; font-size:16px; }
+.msg { margin-top:14px; text-align:center; font-size:14px; min-height:20px; }
+.msg.err { color:var(--danger); } .msg.ok { color:var(--success); }
+
+/* === LAYOUT === */
+#appPage { display:flex; min-height:100vh; }
+.sidebar { width:220px; background:var(--gradient); color:#fff; padding:0; flex-shrink:0; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; }
+.sidebar .logo { padding:24px 20px; font-size:18px; font-weight:700; border-bottom:1px solid rgba(255,255,255,0.15); }
+.sidebar .logo span { font-size:12px; font-weight:400; opacity:.7; display:block; margin-top:4px; }
+.sidebar nav { flex:1; overflow-y:auto; padding:12px 0; }
+.sidebar nav a { display:flex; align-items:center; gap:10px; padding:12px 20px; color:rgba(255,255,255,0.8); text-decoration:none; font-size:14px; transition:.2s; border-left:3px solid transparent; }
+.sidebar nav a:hover { background:rgba(255,255,255,0.1); color:#fff; }
+.sidebar nav a.active { background:rgba(255,255,255,0.15); color:#fff; border-left-color:#fff; }
+.sidebar .user-info { padding:16px 20px; border-top:1px solid rgba(255,255,255,0.15); font-size:13px; }
+.sidebar .user-info a { color:rgba(255,255,255,0.7); cursor:pointer; text-decoration:underline; }
+.main { margin-left:220px; flex:1; padding:24px; min-height:100vh; }
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.page-header h2 { font-size:22px; }
+.toolbar { display:flex; gap:10px; flex-wrap:wrap; }
+
+/* === CARDS === */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+.stat-card .label { font-size:13px; color:var(--text3); margin-bottom:8px; }
+.stat-card .value { font-size:28px; font-weight:700; color:var(--text); }
+.stat-card .value small { font-size:14px; font-weight:400; color:var(--text3); }
+.stat-card.accent { border-left:4px solid var(--primary); }
+.stat-card.green { border-left:4px solid var(--success); }
+.stat-card.orange { border-left:4px solid var(--warning); }
+.stat-card.red { border-left:4px solid var(--danger); }
+
+/* === TABLE === */
+.card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; margin-bottom:20px; }
+.card-title { font-size:16px; font-weight:600; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+th { text-align:left; padding:10px 12px; background:#f8f9fc; color:var(--text2); font-weight:600; border-bottom:2px solid var(--border); white-space:nowrap; }
+td { padding:10px 12px; border-bottom:1px solid var(--border); }
+tr:hover td { background:#fafbfd; }
+.badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:500; }
+.badge-success { background:#e8f5e9; color:#2e7d32; }
+.badge-warning { background:#fff3e0; color:#e65100; }
+.badge-danger { background:#fce4ec; color:#c62828; }
+.badge-info { background:#e3f2fd; color:#1565c0; }
+.badge-gray { background:#f5f5f5; color:#666; }
+.empty-state { text-align:center; padding:48px 20px; color:var(--text3); }
+.empty-state .icon { font-size:48px; margin-bottom:12px; }
+.pagination { display:flex; justify-content:center; gap:8px; margin-top:16px; }
+.pagination button { padding:6px 14px; border:1px solid var(--border); background:#fff; border-radius:6px; cursor:pointer; font-size:13px; }
+.pagination button.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.pagination button:disabled { opacity:.4; cursor:default; }
+
+/* === UPLOAD === */
+.upload-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:40px; text-align:center; cursor:pointer; transition:.3s; }
+.upload-zone:hover, .upload-zone.dragover { border-color:var(--primary); background:rgba(102,126,234,0.05); }
+.upload-zone .icon { font-size:40px; margin-bottom:12px; }
+.upload-zone p { color:var(--text3); font-size:14px; }
+
+/* === MODAL === */
+.modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000; }
+.modal { background:#fff; border-radius:12px; padding:28px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; }
+.modal h3 { margin-bottom:20px; }
+.modal .close-btn { float:right; background:none; border:none; font-size:22px; cursor:pointer; color:var(--text3); }
+
+/* === FORM === */
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.form-row.full { grid-template-columns:1fr; }
+.form-row label { font-size:13px; color:var(--text2); margin-bottom:4px; display:block; }
+.form-row input, .form-row select, .form-row textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; }
+.form-row input:focus, .form-row select:focus { border-color:var(--primary); }
+
+/* === MATCH === */
+.match-panel { display:grid; grid-template-columns:1fr auto 1fr; gap:16px; align-items:start; margin-bottom:20px; }
+.match-arrow { font-size:32px; color:var(--primary); padding-top:60px; }
+
+/* === RESPONSIVE === */
+@media (max-width:768px) {
+  .sidebar { width:60px; }
+  .sidebar .logo span, .sidebar nav a span, .sidebar .user-info { display:none; }
+  .sidebar nav a { justify-content:center; padding:14px; }
+  .main { margin-left:60px; padding:16px; }
+  .stats-grid { grid-template-columns:1fr 1fr; }
+  .form-row { grid-template-columns:1fr; }
+  .match-panel { grid-template-columns:1fr; }
+  .match-arrow { transform:rotate(90deg); padding:0; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="loginPage">
+  <div class="login-card">
+    <h2>🏦 FP 财务系统</h2>
+    <p class="sub">进销存对账核销管理平台</p>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="loginUser" placeholder="请输入用户名" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="loginPass" placeholder="请输入密码" required minlength="6" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">登 录</button>
+    </form>
+    <div id="loginMsg" class="msg"></div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="appPage" class="hidden">
+  <aside class="sidebar">
+    <div class="logo">🏦 FP 财务系统<span>进销存对账核销平台</span></div>
+    <nav id="navMenu">
+      <a href="#" data-page="dashboard" class="active">📊 <span>仪表盘</span></a>
+      <a href="#" data-page="invoices">📄 <span>发票管理</span></a>
+      <a href="#" data-page="statements">📋 <span>对账单管理</span></a>
+      <a href="#" data-page="matching">🔗 <span>对账核销</span></a>
+      <a href="#" data-page="payments">💰 <span>回款管理</span></a>
+      <a href="#" data-page="enterprises">🏢 <span>企业管理</span></a>
+      <a href="#" data-page="materials">📦 <span>物料管理</span></a>
+      <a href="#" data-page="mappings">🔄 <span>料号映射</span></a>
+      <a href="#" data-page="config">⚙️ <span>系统配置</span></a>
+      <a href="#" data-page="audit">📝 <span>审计日志</span></a>
+    </nav>
+    <div class="user-info">
+      👤 <span id="userInfoName">admin</span>
+      <a onclick="doLogout()">退出</a>
+    </div>
+  </aside>
+
+  <main class="main" id="mainContent">
+    <!-- Pages rendered by JS -->
+  </main>
+</div>
+
+<!-- Modal container -->
+<div id="modalContainer"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  GLOBAL STATE
+// ═══════════════════════════════════════
+const API = '';  // same origin
+let state = {
+  token: localStorage.getItem('fp_token') || '',
+  user: JSON.parse(localStorage.getItem('fp_user') || 'null'),
+  currentPage: 'dashboard'
+};
+
+// ═══════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+
+function fmt(n) {
+  if (n === null || n === undefined) return '0.00';
+  return Number(n).toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtInt(n) { return Number(n || 0).toLocaleString(); }
+
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+  if (opts.body instanceof FormData) delete headers['Content-Type'];
+  const res = await fetch(API + path, { ...opts, headers });
+  if (!res.ok && res.status === 401) { doLogout(); throw new Error('未授权'); }
+  return res.json();
+}
+async function apiGet(path) { return api(path); }
+async function apiPost(path, data) { return api(path, { method:'POST', body: data instanceof FormData ? data : JSON.stringify(data) }); }
+async function apiDelete(path) { return api(path, { method:'DELETE' }); }
+async function apiPut(path, data) { return api(path, { method:'PUT', body: JSON.stringify(data) }); }
+
+function showModal(html) {
+  $('#modalContainer').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="close-btn" onclick="closeModal()">✕</button>${html}</div></div>`;
+}
+function closeModal() { $('#modalContainer').innerHTML = ''; }
+
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:20px;right:20px;padding:14px 24px;border-radius:8px;color:#fff;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:.3s;background:${type==='success'?'var(--success)':'var(--danger)'};`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function pagination(total, page, size, onPage) {
+  const pages = Math.ceil(total / size) || 1;
+  let html = '<div class="pagination">';
+  html += `<button ${page<=1?'disabled':''} onclick="${onPage}(${page-1})">‹ 上一页</button>`;
+  for (let i = 1; i <= Math.min(pages, 10); i++) {
+    html += `<button class="${i===page?'active':''}" onclick="${onPage}(${i})">${i}</button>`;
+  }
+  html += `<button ${page>=pages?'disabled':''} onclick="${onPage}(${page+1})">下一页 ›</button>`;
+  html += `<span style="line-height:32px;margin-left:8px;font-size:13px;color:var(--text3)">共 ${total} 条</span>`;
+  html += '</div>';
+  return html;
+}
+
+// ═══════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════
+$('#loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  btn.textContent = '登录中...'; btn.disabled = true;
+  const msgEl = $('#loginMsg');
+  try {
+    const res = await apiPost('/api/login', {
+      username: $('#loginUser').value.trim(),
+      password: $('#loginPass').value
+    });
+    if (res.code === 0) {
+      state.token = res.data.token;
+      state.user = res.data;
+      localStorage.setItem('fp_token', state.token);
+      localStorage.setItem('fp_user', JSON.stringify(res.data));
+      enterApp();
+    } else {
+      msgEl.className = 'msg err';
+      msgEl.textContent = res.message || '登录失败';
+    }
+  } catch(err) {
+    msgEl.className = 'msg err';
+    msgEl.textContent = '网络错误: ' + err.message;
+  } finally {
+    btn.textContent = '登 录'; btn.disabled = false;
+  }
+});
+
+function doLogout() {
+  state.token = ''; state.user = null;
+  localStorage.removeItem('fp_token');
+  localStorage.removeItem('fp_user');
+  $('#loginPage').classList.remove('hidden');
+  $('#appPage').classList.add('hidden');
+}
+
+function enterApp() {
+  $('#loginPage').classList.add('hidden');
+  $('#appPage').classList.remove('hidden');
+  $('#userInfoName').textContent = state.user?.real_name || state.user?.username || 'admin';
+  navigate('dashboard');
+}
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+$('#navMenu').addEventListener('click', (e) => {
+  const a = e.target.closest('a[data-page]');
+  if (!a) return;
+  e.preventDefault();
+  navigate(a.dataset.page);
+});
+
+function navigate(page) {
+  state.currentPage = page;
+  $$('#navMenu a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
+  const renderers = {
+    dashboard: renderDashboard, invoices: renderInvoices, statements: renderStatements,
+    matching: renderMatching, payments: renderPayments, enterprises: renderEnterprises,
+    materials: renderMaterials, mappings: renderMappings, config: renderConfig, audit: renderAudit
+  };
+  (renderers[page] || renderDashboard)();
+}
+
+// ═══════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════
+async function renderDashboard() {
+  const main = $('#mainContent');
+  main.innerHTML = '<div class="page-header"><h2>📊 仪表盘</h2><div class="toolbar"><button class="btn btn-outline btn-sm" onclick="renderDashboard()">🔄 刷新</button></div></div><p>加载中...</p>';
+  try {
+    const res = await apiGet('/api/dashboard/summary');
+    if (res.code !== 0) { main.innerHTML += '<p>加载失败</p>'; return; }
+    const d = res.data;
+    const ms = d.match_stats || {};
+    main.innerHTML = `
+      <div class="page-header"><h2>📊 仪表盘</h2>
+        <div class="toolbar">
+          <button class="btn btn-primary btn-sm" onclick="showUploadInvoiceModal()">📄 上传发票</button>
+          <button class="btn btn-info btn-sm" onclick="showUploadStatementModal()">📋 上传对账单</button>
+          <button class="btn btn-warning btn-sm" onclick="doBatchMatch()">🔗 批量匹配</button>
+          <button class="btn btn-success btn-sm" onclick="window.open('/api/export/invoices?format=xlsx')">📥 导出发票</button>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card accent"><div class="label">📄 发票数量</div><div class="value">${fmtInt(d.invoice_count)} <small>张</small></div></div>
+        <div class="stat-card accent"><div class="label">💵 发票总金额</div><div class="value">¥${fmt(d.invoice_total)}</div></div>
+        <div class="stat-card green"><div class="label">📋 对账单数量</div><div class="value">${fmtInt(d.statement_count)} <small>份</small></div></div>
+        <div class="stat-card green"><div class="label">💰 回款总额</div><div class="value">¥${fmt(d.payment_total)}</div></div>
+        <div class="stat-card red"><div class="label">⚠️ 待回款</div><div class="value">¥${fmt(d.unpaid)}</div></div>
+        <div class="stat-card orange"><div class="label">🔗 完全匹配</div><div class="value">${fmtInt(ms.auto_matched)} <small>条</small></div></div>
+        <div class="stat-card orange"><div class="label">💡 建议匹配</div><div class="value">${fmtInt(ms.suggested)} <small>条</small></div></div>
+        <div class="stat-card red"><div class="label">❌ 未匹配</div><div class="value">${fmtInt(ms.unmatched)} <small>条</small></div></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">🏢 企业数</div><div class="value">${fmtInt(d.enterprise_count)}</div></div>
+        <div class="stat-card"><div class="label">📦 物料数</div><div class="value">${fmtInt(d.material_count)}</div></div>
+        <div class="stat-card"><div class="label">🚨 待处理异常</div><div class="value">${fmtInt(d.anomaly_open)}</div></div>
+      </div>
+    `;
+  } catch(e) { main.innerHTML = `<p>加载失败: ${e.message}</p>`; }
+}
+
+// ═══════════════════════════════════════
+//  INVOICES
+// ═══════════════════════════════════════
+let invPage = 1;
+async function renderInvoices(page) {
+  invPage = page || 1;
+  const main = $('#mainContent');
+  main.innerHTML = `
+    <div class="page-header"><h2>📄 发票管理</h2>
+      <div class="toolbar">
+        <input type="text" id="invSearch" placeholder="搜索发票号/购方/销方..." style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;width:240px">
+        <button class="btn btn-primary btn-sm" onclick="searchInvoices()">🔍 搜索</button>
+        <button class="btn btn-success btn-sm" onclick="showUploadInvoiceModal()">⬆️ 上传PDF</button>
+        <button class="btn btn-outline btn-sm" onclick="window.open('/api/export/invoices?format=xlsx')">📥 导出Excel</button>
+      </div>
+    </div>
+    <div class="card"><div id="invTable">加载中...</div></div>`;
+  await loadInvoices();
+}
+async function loadInvoices(page) {
+  invPage = page || invPage || 1;
+  const kw = document.getElementById('invSearch')?.value || '';
+  const res = await apiGet(`/api/invoices?page=${invPage}&size=15&keyword=${encodeURIComponent(kw)}`);
+  if (res.code !== 0) { document.getElementById('invTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>ID</th><th>发票号码</th><th>日期</th><th>类型</th><th>购方</th><th>销方</th><th>价税合计</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+  if (rows.length === 0) {
+    html += '<tr><td colspan="9" class="empty-state"><div class="icon">📄</div>暂无发票数据，请上传PDF</td></tr>';
+  }
+  rows.forEach(r => {
+    const statusBadge = r.status === 'matched' ? '<span class="badge badge-success">已匹配</span>' :
+                        r.status === 'void' ? '<span class="badge badge-danger">已作废</span>' :
+                        '<span class="badge badge-info">正常</span>';
+    html += `<tr>
+      <td>${r.id}</td><td>${r.invoice_number||'-'}</td><td>${r.invoice_date||'-'}</td>
+      <td>${r.invoice_type||'-'}</td><td>${r.buyer_name||'-'}</td><td>${r.seller_name||'-'}</td>
+      <td style="text-align:right;font-weight:600">¥${fmt(r.total_amount_incl)}</td>
+      <td>${statusBadge}</td>
+      <td><button class="btn btn-info btn-sm" onclick="viewInvoice(${r.id})">详情</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteInvoice(${r.id})">删除</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  html += pagination(res.total || 0, invPage, 15, 'loadInvoices');
+  document.getElementById('invTable').innerHTML = html;
+}
+function searchInvoices() { invPage = 1; loadInvoices(1); }
+async function viewInvoice(id) {
+  const res = await apiGet(`/api/invoices/${id}`);
+  if (res.code !== 0) { toast(res.message, 'error'); return; }
+  const d = res.data;
+  const items = d.items || [];
+  let itemsHtml = '<table><thead><tr><th>行号</th><th>物料名称</th><th>规格</th><th>单位</th><th>数量</th><th>不含税单价</th><th>不含税金额</th><th>税率</th><th>税额</th></tr></thead><tbody>';
+  items.forEach(it => {
+    itemsHtml += `<tr><td>${it.line_number}</td><td>${it.material_name||'-'}</td><td>${it.specification||'-'}</td><td>${it.unit}</td><td>${it.quantity}</td><td>¥${fmt(it.unit_price_excl)}</td><td>¥${fmt(it.amount_excl)}</td><td>${it.tax_rate}%</td><td>¥${fmt(it.tax_amount)}</td></tr>`;
+  });
+  itemsHtml += '</tbody></table>';
+  showModal(`
+    <h3>发票详情 #${d.id}</h3>
+    <div class="form-row"><div><label>发票号码</label><p>${d.invoice_number}</p></div><div><label>日期</label><p>${d.invoice_date}</p></div></div>
+    <div class="form-row"><div><label>类型</label><p>${d.invoice_type}</p></div><div><label>价税合计</label><p style="font-size:20px;font-weight:700;color:var(--primary)">¥${fmt(d.total_amount_incl)}</p></div></div>
+    <div class="form-row"><div><label>购方</label><p>${d.buyer_name}</p></div><div><label>销方</label><p>${d.seller_name}</p></div></div>
+    <div class="card-title" style="margin-top:16px">明细行 (${items.length})</div>
+    <div style="overflow-x:auto">${itemsHtml}</div>
+  `);
+}
+async function deleteInvoice(id) {
+  if (!confirm('确定删除这张发票？')) return;
+  const res = await apiDelete(`/api/invoices/${id}`);
+  if (res.code === 0) { toast('删除成功'); loadInvoices(); } else toast(res.message, 'error');
+}
+
+function showUploadInvoiceModal() {
+  showModal(`
+    <h3>📄 上传发票PDF</h3>
+    <div class="upload-zone" id="invUploadZone" onclick="document.getElementById('invFileInput').click()">
+      <div class="icon">📁</div>
+      <p>点击或拖拽PDF文件到此处</p>
+      <p style="font-size:12px;margin-top:8px">支持 .pdf 格式</p>
+    </div>
+    <input type="file" id="invFileInput" accept=".pdf" style="display:none" onchange="handleInvoiceUpload(this.files[0])">
+    <div id="invUploadStatus" style="margin-top:16px;text-align:center"></div>
+  `);
+  const zone = document.getElementById('invUploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); if(e.dataTransfer.files[0]) handleInvoiceUpload(e.dataTransfer.files[0]); });
+}
+async function handleInvoiceUpload(file) {
+  if (!file || !file.name.endsWith('.pdf')) { toast('请上传PDF文件', 'error'); return; }
+  const statusEl = document.getElementById('invUploadStatus');
+  statusEl.innerHTML = '<p>⏳ 正在解析中，请稍候...</p>';
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const res = await apiPost('/api/invoices/upload', fd);
+    if (res.code === 0) {
+      statusEl.innerHTML = `<p style="color:var(--success)">✅ 解析成功！发票号: ${res.data.invoice_number}</p>`;
+      toast('发票上传成功');
+      setTimeout(() => { closeModal(); loadInvoices(); }, 1500);
+    } else {
+      statusEl.innerHTML = `<p style="color:var(--danger)">❌ ${res.message}</p>`;
+    }
+  } catch(e) { statusEl.innerHTML = `<p style="color:var(--danger)">上传失败: ${e.message}</p>`; }
+}
+
+// ═══════════════════════════════════════
+//  STATEMENTS
+// ═══════════════════════════════════════
+let stmtPage = 1;
+async function renderStatements(page) {
+  stmtPage = page || 1;
+  const main = $('#mainContent');
+  main.innerHTML = `
+    <div class="page-header"><h2>📋 对账单管理</h2>
+      <div class="toolbar">
+        <button class="btn btn-success btn-sm" onclick="showUploadStatementModal()">⬆️ 上传PDF</button>
+        <button class="btn btn-outline btn-sm" onclick="window.open('/api/export/statements?format=xlsx')">📥 导出Excel</button>
+      </div>
+    </div>
+    <div class="card"><div id="stmtTable">加载中...</div></div>`;
+  await loadStatements();
+}
+async function loadStatements(page) {
+  stmtPage = page || stmtPage || 1;
+  const res = await apiGet(`/api/statements?page=${stmtPage}&size=15`);
+  if (res.code !== 0) { document.getElementById('stmtTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>ID</th><th>账期</th><th>客户</th><th>供应商</th><th>期初余额</th><th>本期付款</th><th>期末余额</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+  if (rows.length === 0) {
+    html += '<tr><td colspan="9" class="empty-state"><div class="icon">📋</div>暂无对账单数据</td></tr>';
+  }
+  rows.forEach(r => {
+    html += `<tr>
+      <td>${r.id}</td><td>${r.statement_period||'-'}</td><td>${r.customer_name||'-'}</td><td>${r.supplier_name||'-'}</td>
+      <td>¥${fmt(r.opening_balance)}</td><td>¥${fmt(r.current_payment)}</td><td style="font-weight:600">¥${fmt(r.closing_balance)}</td>
+      <td><span class="badge badge-${r.balance_status==='balanced'?'success':'warning'}">${r.balance_status==='balanced'?'平衡':'不平衡'}</span></td>
+      <td><button class="btn btn-info btn-sm" onclick="viewStatement(${r.id})">详情</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteStatement(${r.id})">删除</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  html += pagination(res.total || 0, stmtPage, 15, 'loadStatements');
+  document.getElementById('stmtTable').innerHTML = html;
+}
+async function viewStatement(id) {
+  const res = await apiGet(`/api/statements/${id}`);
+  if (res.code !== 0) { toast(res.message, 'error'); return; }
+  const d = res.data;
+  const items = d.items || [];
+  let itemsHtml = '<table><thead><tr><th>序号</th><th>产品名</th><th>客户料号</th><th>送货单号</th><th>送货日期</th><th>数量</th><th>含税单价</th><th>含税金额</th></tr></thead><tbody>';
+  items.forEach(it => {
+    itemsHtml += `<tr><td>${it.seq}</td><td>${it.product_name||'-'}</td><td>${it.customer_material_code||'-'}</td><td>${it.delivery_no||'-'}</td><td>${it.delivery_date||'-'}</td><td>${it.quantity}</td><td>¥${fmt(it.unit_price_incl_tax)}</td><td>¥${fmt(it.amount_incl_tax)}</td></tr>`;
+  });
+  itemsHtml += '</tbody></table>';
+  showModal(`
+    <h3>对账单详情 #${d.id}</h3>
+    <div class="form-row"><div><label>账期</label><p>${d.statement_period}</p></div><div><label>结算天数</label><p>${d.settlement_days}天</p></div></div>
+    <div class="form-row"><div><label>客户</label><p>${d.customer_name}</p></div><div><label>供应商</label><p>${d.supplier_name}</p></div></div>
+    <div class="form-row"><div><label>期初余额</label><p>¥${fmt(d.opening_balance)}</p></div><div><label>本期付款</label><p>¥${fmt(d.current_payment)}</p></div></div>
+    <div class="form-row"><div><label>期末余额</label><p style="font-size:20px;font-weight:700;color:var(--primary)">¥${fmt(d.closing_balance)}</p></div><div><label>平衡状态</label><p>${d.balance_status}</p></div></div>
+    <div class="card-title" style="margin-top:16px">明细行 (${items.length})</div>
+    <div style="overflow-x:auto">${itemsHtml}</div>
+  `);
+}
+async function deleteStatement(id) {
+  if (!confirm('确定删除？')) return;
+  const res = await apiDelete(`/api/statements/${id}`);
+  if (res.code === 0) { toast('删除成功'); loadStatements(); } else toast(res.message, 'error');
+}
+function showUploadStatementModal() {
+  showModal(`
+    <h3>📋 上传对账单PDF</h3>
+    <div class="upload-zone" id="stmtUploadZone" onclick="document.getElementById('stmtFileInput').click()">
+      <div class="icon">📁</div>
+      <p>点击或拖拽PDF文件到此处</p>
+    </div>
+    <input type="file" id="stmtFileInput" accept=".pdf" style="display:none" onchange="handleStatementUpload(this.files[0])">
+    <div id="stmtUploadStatus" style="margin-top:16px;text-align:center"></div>
+  `);
+  const zone = document.getElementById('stmtUploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); if(e.dataTransfer.files[0]) handleStatementUpload(e.dataTransfer.files[0]); });
+}
+async function handleStatementUpload(file) {
+  if (!file || !file.name.endsWith('.pdf')) { toast('请上传PDF文件', 'error'); return; }
+  const statusEl = document.getElementById('stmtUploadStatus');
+  statusEl.innerHTML = '<p>⏳ 正在解析中...</p>';
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const res = await apiPost('/api/statements/upload', fd);
+    if (res.code === 0) {
+      statusEl.innerHTML = `<p style="color:var(--success)">✅ 解析成功！账期: ${res.data.statement_month || res.data.period}</p>`;
+      toast('对账单上传成功');
+      setTimeout(() => { closeModal(); loadStatements(); }, 1500);
+    } else {
+      statusEl.innerHTML = `<p style="color:var(--danger)">❌ ${res.message}</p>`;
+    }
+  } catch(e) { statusEl.innerHTML = `<p style="color:var(--danger)">上传失败: ${e.message}</p>`; }
+}
+
+// ═══════════════════════════════════════
+//  MATCHING
+// ═══════════════════════════════════════
+let matchPage = 1;
+async function renderMatching(page) {
+  matchPage = page || 1;
+  const main = $('#mainContent');
+  main.innerHTML = `
+    <div class="page-header"><h2>🔗 对账核销</h2>
+      <div class="toolbar">
+        <button class="btn btn-warning btn-sm" onclick="doBatchMatch()">⚡ 批量匹配</button>
+        <button class="btn btn-outline btn-sm" onclick="window.open('/api/export/match-results')">📥 导出结果</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">手动匹配</div>
+      <div class="match-panel">
+        <div><label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">发票ID</label><input type="number" id="matchInvId" placeholder="输入发票ID" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px"></div>
+        <div class="match-arrow">→</div>
+        <div><label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">对账单ID</label><input type="number" id="matchStmtId" placeholder="输入对账单ID" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px"></div>
+      </div>
+      <button class="btn btn-primary" onclick="doSingleMatch()">🔗 执行匹配</button>
+      <div id="matchResult" style="margin-top:16px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">匹配结果列表</div>
+      <div id="matchTable">加载中...</div>
+    </div>`;
+  await loadMatchResults();
+}
+async function loadMatchResults(page) {
+  matchPage = page || matchPage || 1;
+  const res = await apiGet(`/api/match/results?page=${matchPage}&size=15`);
+  if (res.code !== 0) { document.getElementById('matchTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>ID</th><th>发票号</th><th>账期</th><th>匹配分数</th><th>级别</th><th>已确认</th><th>操作</th></tr></thead><tbody>';
+  if (rows.length === 0) {
+    html += '<tr><td colspan="7" class="empty-state"><div class="icon">🔗</div>暂无匹配结果，请先执行匹配</td></tr>';
+  }
+  rows.forEach(r => {
+    const score = Number(r.match_score || 0);
+    const scoreColor = score >= 80 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--danger)';
+    const levelBadge = r.match_level === 'full' ? '<span class="badge badge-success">完全匹配</span>' :
+                       r.match_level === 'partial' ? '<span class="badge badge-warning">建议匹配</span>' :
+                       '<span class="badge badge-danger">不匹配</span>';
+    html += `<tr>
+      <td>${r.id}</td><td>${r.invoice_number||'-'}</td><td>${r.statement_period||'-'}</td>
+      <td><span style="color:${scoreColor};font-weight:700">${score.toFixed(1)}%</span></td>
+      <td>${levelBadge}</td>
+      <td>${r.is_confirmed ? '✅' : '⬜'}</td>
+      <td>${!r.is_confirmed ? `<button class="btn btn-success btn-sm" onclick="confirmMatch(${r.id})">确认</button>` : '-'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  html += pagination(res.total || 0, matchPage, 15, 'loadMatchResults');
+  document.getElementById('matchTable').innerHTML = html;
+}
+async function doSingleMatch() {
+  const invId = document.getElementById('matchInvId').value;
+  const stmtId = document.getElementById('matchStmtId').value;
+  if (!invId || !stmtId) { toast('请输入发票ID和对账单ID', 'error'); return; }
+  const resultEl = document.getElementById('matchResult');
+  resultEl.innerHTML = '<p>⏳ 匹配中...</p>';
+  try {
+    const res = await apiPost('/api/match', { invoice_id: Number(invId), statement_id: Number(stmtId) });
+    if (res.code === 0) {
+      const d = res.data;
+      resultEl.innerHTML = `<div style="background:#f0fff4;padding:16px;border-radius:8px;margin-top:12px">
+        <p style="font-weight:600;color:var(--success)">✅ 匹配完成</p>
+        <p>完全匹配: ${d.auto_matched || 0} 条 | 建议匹配: ${d.suggested || 0} 条 | 未匹配: ${d.unmatched || 0} 条</p>
+      </div>`;
+      loadMatchResults();
+    } else {
+      resultEl.innerHTML = `<p style="color:var(--danger)">❌ ${res.message}</p>`;
+    }
+  } catch(e) { resultEl.innerHTML = `<p style="color:var(--danger)">匹配失败: ${e.message}</p>`; }
+}
+async function doBatchMatch() {
+  if (!confirm('确定对所有未匹配的发票和对账单执行批量匹配？')) return;
+  toast('批量匹配开始，请稍候...');
+  try {
+    const res = await apiPost('/api/match/batch', {});
+    if (res.code === 0) {
+      const d = res.data;
+      toast(`匹配完成: ${d.auto_matched}条完全匹配, ${d.suggested}条建议, ${d.unmatched}条未匹配`);
+      if (state.currentPage === 'matching') loadMatchResults();
+    } else toast(res.message, 'error');
+  } catch(e) { toast('批量匹配失败: ' + e.message, 'error'); }
+}
+async function confirmMatch(id) {
+  const res = await apiPost(`/api/match/${id}/confirm`, {});
+  if (res.code === 0) { toast('确认成功'); loadMatchResults(); } else toast(res.message, 'error');
+}
+
+// ═══════════════════════════════════════
+//  PAYMENTS
+// ═══════════════════════════════════════
+let payPage = 1;
+async function renderPayments(page) {
+  payPage = page || 1;
+  const main = $('#mainContent');
+  main.innerHTML = `
+    <div class="page-header"><h2>💰 回款管理</h2>
+      <div class="toolbar"><button class="btn btn-success btn-sm" onclick="showAddPaymentModal()">➕ 录入回款</button></div>
+    </div>
+    <div class="card"><div id="payTable">加载中...</div></div>`;
+  await loadPayments();
+}
+async function loadPayments(page) {
+  payPage = page || payPage || 1;
+  const res = await apiGet(`/api/payments?page=${payPage}&size=15`);
+  if (res.code !== 0) { document.getElementById('payTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>ID</th><th>账期</th><th>客户</th><th>回款日期</th><th>金额</th><th>方式</th><th>备注</th></tr></thead><tbody>';
+  if (rows.length === 0) {
+    html += '<tr><td colspan="7" class="empty-state"><div class="icon">💰</div>暂无回款记录</td></tr>';
+  }
+  rows.forEach(r => {
+    html += `<tr><td>${r.id}</td><td>${r.statement_period||'-'}</td><td>${r.customer_name||'-'}</td><td>${r.payment_date||'-'}</td><td style="font-weight:600;color:var(--success)">¥${fmt(r.amount)}</td><td>${r.payment_method||'-'}</td><td>${r.remark||'-'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  html += pagination(res.total || 0, payPage, 15, 'loadPayments');
+  document.getElementById('payTable').innerHTML = html;
+}
+function showAddPaymentModal() {
+  showModal(`
+    <h3>💰 录入回款</h3>
+    <div class="form-row"><div><label>对账单ID *</label><input type="number" id="payStmtId" placeholder="对账单ID"></div><div><label>发票ID (可选)</label><input type="number" id="payInvId" placeholder="发票ID"></div></div>
+    <div class="form-row"><div><label>回款日期 *</label><input type="date" id="payDate"></div><div><label>金额 *</label><input type="number" step="0.01" id="payAmount" placeholder="0.00"></div></div>
+    <div class="form-row"><div><label>支付方式</label><select id="payMethod"><option value="bank_transfer">银行转账</option><option value="check">支票</option><option value="bill">汇票</option><option value="cash">现金</option></select></div><div><label>备注</label><input type="text" id="payRemark" placeholder="备注信息"></div></div>
+    <div style="text-align:right;margin-top:20px"><button class="btn btn-primary" onclick="submitPayment()">确认录入</button></div>
+  `);
+}
+async function submitPayment() {
+  const data = {
+    statement_id: Number($('#payStmtId').value),
+    invoice_id: $('#payInvId').value ? Number($('#payInvId').value) : null,
+    payment_date: $('#payDate').value,
+    amount: Number($('#payAmount').value),
+    payment_method: $('#payMethod').value,
+    remark: $('#payRemark').value
+  };
+  if (!data.statement_id || !data.payment_date || !data.amount) { toast('请填写必填项', 'error'); return; }
+  const res = await apiPost('/api/payments', data);
+  if (res.code === 0) { toast('回款录入成功'); closeModal(); loadPayments(); } else toast(res.message, 'error');
+}
+
+// ═══════════════════════════════════════
+//  ENTERPRISES
+// ═══════════════════════════════════════
+let entPage = 1;
+async function renderEnterprises(page) {
+  entPage = page || 1;
+  const main = $('#mainContent');
+  main.innerHTML = `
+    <div class="page-header"><h2>🏢 企业管理</h2>
+      <div class="toolbar"><button class="btn btn-success btn-sm" onclick="showAddEnterpriseModal()">➕ 新增企业</button></div>
+    </div>
+    <div class="card"><div id="entTable">加载中...</div></div>`;
+  await loadEnterprises();
+}
+async function loadEnterprises(page) {
+  entPage = page || entPage || 1;
+  const res = await apiGet(`/api/enterprises?page=${entPage}&size=15`);
+  if (res.code !== 0) { document.getElementById('entTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>ID</th><th>企业名称</th><th>税号</th><th>类型</th><th>联系人</th><th>电话</th></tr></thead><tbody>';
+  if (rows.length === 0) html += '<tr><td colspan="6" class="empty-state"><div class="icon">🏢</div>暂无企业数据</td></tr>';
+  rows.forEach(r => {
+    html += `<tr><td>${r.id}</td><td>${r.enterprise_name}</td><td>${r.tax_id||'-'}</td><td><span class="badge badge-info">${r.enterprise_type||'both'}</span></td><td>${r.contact_person||'-'}</td><td>${r.phone||'-'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  html += pagination(res.total || 0, entPage, 15, 'loadEnterprises');
+  document.getElementById('entTable').innerHTML = html;
+}
+function showAddEnterpriseModal() {
+  showModal(`
+    <h3>🏢 新增企业</h3>
+    <div class="form-row full"><div><label>企业名称 *</label><input type="text" id="entName" placeholder="企业全称"></div></div>
+    <div class="form-row"><div><label>税号</label><input type="text" id="entTaxId" placeholder="纳税人识别号"></div><div><label>类型</label><select id="entType"><option value="customer">客户</option><option value="supplier">供应商</option><option value="both">客户+供应商</option></select></div></div>
+    <div class="form-row"><div><label>联系人</label><input type="text" id="entContact"></div><div><label>电话</label><input type="text" id="entPhone"></div></div>
+    <div class="form-row full"><div><label>地址</label><input type="text" id="entAddr"></div></div>
+    <div style="text-align:right;margin-top:20px"><button class="btn btn-primary" onclick="submitEnterprise()">保存</button></div>
+  `);
+}
+async function submitEnterprise() {
+  const data = {
+    enterprise_name: $('#entName').value,
+    tax_id: $('#entTaxId').value,
+    enterprise_type: $('#entType').value,
+    contact_person: $('#entContact').value,
+    phone: $('#entPhone').value,
+    address: $('#entAddr').value
+  };
+  if (!data.enterprise_name) { toast('企业名称必填', 'error'); return; }
+  const res = await apiPost('/api/enterprises', data);
+  if (res.code === 0) { toast('创建成功'); closeModal(); loadEnterprises(); } else toast(res.message, 'error');
+}
+
+// ═══════════════════════════════════════
+//  MATERIALS
+// ═══════════════════════════════════════
+let matPage = 1;
+async function renderMaterials(page) {
+  matPage = page || 1;
+  const main = $('#mainContent');
+  main.innerHTML = `
+    <div class="page-header"><h2>📦 物料管理</h2>
+      <div class="toolbar">
+        <input type="text" id="matSearch" placeholder="搜索物料编码/名称..." style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;width:220px">
+        <button class="btn btn-primary btn-sm" onclick="searchMaterials()">🔍 搜索</button>
+        <button class="btn btn-success btn-sm" onclick="showAddMaterialModal()">➕ 新增物料</button>
+      </div>
+    </div>
+    <div class="card"><div id="matTable">加载中...</div></div>`;
+  await loadMaterials();
+}
+async function loadMaterials(page) {
+  matPage = page || matPage || 1;
+  const kw = document.getElementById('matSearch')?.value || '';
+  const res = await apiGet(`/api/materials?page=${matPage}&size=15&keyword=${encodeURIComponent(kw)}`);
+  if (res.code !== 0) { document.getElementById('matTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>ID</th><th>编码</th><th>名称</th><th>分类</th><th>规格</th><th>单位</th><th>税率</th></tr></thead><tbody>';
+  if (rows.length === 0) html += '<tr><td colspan="7" class="empty-state"><div class="icon">📦</div>暂无物料数据</td></tr>';
+  rows.forEach(r => {
+    html += `<tr><td>${r.id}</td><td>${r.material_code}</td><td>${r.material_name}</td><td>${r.category||'-'}</td><td>${r.specification||'-'}</td><td>${r.unit}</td><td>${r.tax_rate}%</td></tr>`;
+  });
+  html += '</tbody></table>';
+  html += pagination(res.total || 0, matPage, 15, 'loadMaterials');
+  document.getElementById('matTable').innerHTML = html;
+}
+function searchMaterials() { matPage = 1; loadMaterials(1); }
+function showAddMaterialModal() {
+  showModal(`
+    <h3>📦 新增物料</h3>
+    <div class="form-row"><div><label>物料编码 *</label><input type="text" id="matCode" placeholder="MAT001"></div><div><label>物料名称 *</label><input type="text" id="matName" placeholder="物料名称"></div></div>
+    <div class="form-row"><div><label>分类</label><input type="text" id="matCat" placeholder="电子元器件"></div><div><label>规格</label><input type="text" id="matSpec" placeholder="规格型号"></div></div>
+    <div class="form-row"><div><label>单位</label><select id="matUnit"><option value="PCS">个/件</option><option value="KG">千克</option><option value="M">米</option><option value="SET">套</option></select></div><div><label>税率(%)</label><input type="number" id="matTax" value="13" step="0.1"></div></div>
+    <div style="text-align:right;margin-top:20px"><button class="btn btn-primary" onclick="submitMaterial()">保存</button></div>
+  `);
+}
+async function submitMaterial() {
+  const data = {
+    material_code: $('#matCode').value, material_name: $('#matName').value,
+    category: $('#matCat').value, specification: $('#matSpec').value,
+    unit: $('#matUnit').value, tax_rate: Number($('#matTax').value)
+  };
+  if (!data.material_code || !data.material_name) { toast('编码和名称必填', 'error'); return; }
+  const res = await apiPost('/api/materials', data);
+  if (res.code === 0) { toast('创建成功'); closeModal(); loadMaterials(); } else toast(res.message, 'error');
+}
+
+// ═══════════════════════════════════════
+//  MAPPINGS
+// ═══════════════════════════════════════
+let mapPage = 1;
+async function renderMappings(page) {
+  mapPage = page || 1;
+  const main = $('#mainContent');
+  main.innerHTML = `
+    <div class="page-header"><h2>🔄 料号映射</h2>
+      <div class="toolbar"><button class="btn btn-success btn-sm" onclick="showAddMappingModal()">➕ 新增映射</button></div>
+    </div>
+    <div class="card"><div id="mapTable">加载中...</div></div>`;
+  await loadMappings();
+}
+async function loadMappings(page) {
+  mapPage = page || mapPage || 1;
+  const res = await apiGet(`/api/material-mappings?page=${mapPage}&size=20`);
+  if (res.code !== 0) { document.getElementById('mapTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>ID</th><th>客户料号</th><th>供应商料号</th><th>客户</th><th>供应商</th><th>规格</th><th>单位</th></tr></thead><tbody>';
+  if (rows.length === 0) html += '<tr><td colspan="7" class="empty-state"><div class="icon">🔄</div>暂无映射数据</td></tr>';
+  rows.forEach(r => {
+    html += `<tr><td>${r.id}</td><td>${r.customer_material_code}</td><td>${r.supplier_material_code}</td><td>${r.customer_name||'-'}</td><td>${r.supplier_name||'-'}</td><td>${r.spec||'-'}</td><td>${r.unit}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  html += pagination(res.total || 0, mapPage, 20, 'loadMappings');
+  document.getElementById('mapTable').innerHTML = html;
+}
+function showAddMappingModal() {
+  showModal(`
+    <h3>🔄 新增料号映射</h3>
+    <div class="form-row"><div><label>客户料号 *</label><input type="text" id="mapCustCode"></div><div><label>供应商料号 *</label><input type="text" id="mapSupCode"></div></div>
+    <div class="form-row"><div><label>客户名称</label><input type="text" id="mapCustName"></div><div><label>供应商名称</label><input type="text" id="mapSupName"></div></div>
+    <div class="form-row"><div><label>规格</label><input type="text" id="mapSpec"></div><div><label>单位</label><input type="text" id="mapUnit" value="PCS"></div></div>
+    <div style="text-align:right;margin-top:20px"><button class="btn btn-primary" onclick="submitMapping()">保存</button></div>
+  `);
+}
+async function submitMapping() {
+  const data = {
+    customer_material_code: $('#mapCustCode').value, supplier_material_code: $('#mapSupCode').value,
+    customer_name: $('#mapCustName').value, supplier_name: $('#mapSupName').value,
+    spec: $('#mapSpec').value, unit: $('#mapUnit').value
+  };
+  const res = await apiPost('/api/material-mappings', data);
+  if (res.code === 0) { toast('创建成功'); closeModal(); loadMappings(); } else toast(res.message, 'error');
+}
+
+// ═══════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════
+async function renderConfig() {
+  const main = $('#mainContent');
+  main.innerHTML = '<div class="page-header"><h2>⚙️ 系统配置</h2></div><div class="card"><div id="configTable">加载中...</div></div>';
+  const res = await apiGet('/api/config');
+  if (res.code !== 0) { document.getElementById('configTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>配置项</th><th>值</th><th>说明</th><th>操作</th></tr></thead><tbody>';
+  if (rows.length === 0) html += '<tr><td colspan="4" class="empty-state">暂无配置</td></tr>';
+  rows.forEach(r => {
+    html += `<tr><td><code>${r.config_key}</code></td><td>${r.config_value}</td><td>${r.description||'-'}</td>
+      <td><button class="btn btn-info btn-sm" onclick="editConfig('${r.config_key}','${r.config_value}')">编辑</button></td></tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('configTable').innerHTML = html;
+}
+function editConfig(key, val) {
+  showModal(`
+    <h3>编辑配置: ${key}</h3>
+    <div class="form-row full"><div><label>值</label><input type="text" id="cfgVal" value="${val}"></div></div>
+    <div style="text-align:right;margin-top:20px"><button class="btn btn-primary" onclick="saveConfig('${key}')">保存</button></div>
+  `);
+}
+async function saveConfig(key) {
+  const res = await apiPut(`/api/config/${key}`, { value: $('#cfgVal').value });
+  if (res.code === 0) { toast('保存成功'); closeModal(); renderConfig(); } else toast(res.message, 'error');
+}
+
+// ═══════════════════════════════════════
+//  AUDIT LOGS
+// ═══════════════════════════════════════
+let auditPage = 1;
+async function renderAudit(page) {
+  auditPage = page || 1;
+  const main = $('#mainContent');
+  main.innerHTML = '<div class="page-header"><h2>📝 审计日志</h2></div><div class="card"><div id="auditTable">加载中...</div></div>';
+  await loadAuditLogs();
+}
+async function loadAuditLogs(page) {
+  auditPage = page || auditPage || 1;
+  const res = await apiGet(`/api/audit-logs?page=${auditPage}&size=20`);
+  if (res.code !== 0) { document.getElementById('auditTable').innerHTML = '加载失败'; return; }
+  const rows = res.data || [];
+  let html = '<table><thead><tr><th>ID</th><th>时间</th><th>操作</th><th>对象</th><th>对象ID</th><th>用户</th><th>IP</th></tr></thead><tbody>';
+  if (rows.length === 0) html += '<tr><td colspan="7" class="empty-state"><div class="icon">📝</div>暂无日志</td></tr>';
+  rows.forEach(r => {
+    const actionBadge = r.action === 'LOGIN' ? 'badge-info' : r.action === 'CREATE' ? 'badge-success' : r.action === 'DELETE' ? 'badge-danger' : 'badge-warning';
+    html += `<tr><td>${r.id}</td><td>${r.created_at||'-'}</td><td><span class="badge ${actionBadge}">${r.action}</span></td><td>${r.target_type||'-'}</td><td>${r.target_id||'-'}</td><td>${r.username||'-'}</td><td>${r.ip_address||'-'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  html += pagination(res.total || 0, auditPage, 20, 'loadAuditLogs');
+  document.getElementById('auditTable').innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+if (state.token && state.user) {
+  enterApp();
+} else {
+  $('#loginPage').classList.remove('hidden');
+  $('#appPage').classList.add('hidden');
+}
+</script>
+</body>
+</html>
