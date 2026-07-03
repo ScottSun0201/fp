@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fp-app
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/data:/app/data
+    environment:
+      - PORT=5050
+      - SECRET_KEY=fp-prod-secret-change-me
+    restart: unless-stopped
