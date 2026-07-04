@@ -24,7 +24,8 @@ def parse_invoice_pdf(pdf_path: str) -> dict:
         'amount_capital': '',
         'items': [],
         'raw_text': '',
-        'errors': []
+        'errors': [],
+        'warnings': []
     }
 
     try:
@@ -111,7 +112,7 @@ def parse_invoice_pdf(pdf_path: str) -> dict:
                     result['items'].append(parsed)
 
             if not result['items']:
-                result['errors'].append('未能解析商品明细行')
+                result['warnings'].append('发票无商品明细行（简化发票），仅基础信息可用')
 
             # ── 价税分离验证 ──
             if result['items']:
@@ -126,6 +127,12 @@ def parse_invoice_pdf(pdf_path: str) -> dict:
                     result['errors'].append(
                         f'价税合计不平: 计算值{calc_incl:.2f} ≠ 票面值{result["total_amount_incl"]:.2f}'
                     )
+            else:
+                # 无明细行时，用标准税率反推（默认13%）
+                if result['total_amount_incl'] > 0 and result['total_amount_excl'] == 0:
+                    tax_rate = DEFAULT_TAX_RATE / 100.0  # 13%
+                    result['total_amount_excl'] = round(result['total_amount_incl'] / (1 + tax_rate), 2)
+                    result['total_tax'] = round(result['total_amount_incl'] - result['total_amount_excl'], 2)
 
         return result
 
