@@ -87,29 +87,7 @@ def parse_invoice_pdf(pdf_path: str) -> dict:
                 result['amount_capital'] = m.group(1).strip()
 
             # ── 商品明细行 ──
-            lines = all_text.split('\n')
-            in_items = False
-            item_buf = []
-            for line in lines:
-                stripped = line.strip()
-                if re.search(r'项目名称.*规格型号.*单位.*数量.*单价.*金额', stripped):
-                    in_items = True
-                    continue
-                if not in_items:
-                    continue
-                if re.match(r'^\s*合\s*计', stripped) or re.search(r'价税合计', stripped):
-                    break
-                if not stripped:
-                    continue
-                if item_buf and not re.match(r'^[*\d]', stripped):
-                    item_buf[-1] += stripped
-                else:
-                    item_buf.append(stripped)
-
-            for buf_line in item_buf:
-                parsed = _parse_item_line(buf_line)
-                if parsed:
-                    result['items'].append(parsed)
+            result['items'] = _extract_items(all_text)
 
             if not result['items']:
                 result['warnings'].append('发票无商品明细行（简化发票），仅基础信息可用')
@@ -145,10 +123,10 @@ def _parse_item_line(line: str) -> dict:
     """解析单行商品明细"""
     # 模式1: 完整字段 (*电子元件*压敏电阻  WTR15D050MC3B3.5W  个  7000  0.4867...  3407.08  13%  442.92)
     m = re.match(
-        r'([*·][\u4e00-\u9fff（）()A-Za-z0-9·]+?)\s+'
-        r'([\w\u4e00-\u9fff/·\-\.]+?)\s+'
-        r'(个|台|件|套|只|支|千克|米|卷|升|张|瓶|盒|包|桶|次|组|块|根|PCS)\s+'
-        r'(\d+)\s+'
+        r'(\S+)\s+'
+        r'(\S+)\s+'
+        r'(个|台|件|套|只|支|千克|千个|米|卷|升|张|瓶|盒|包|桶|次|组|块|根|PCS|K)\s+'
+        r'(\d+(?:\.\d+)?)\s+'
         r'([\d\.]+)\s+'
         r'([\d\.]+)'
         r'(?:\s+(\d+%)?)?'
@@ -159,7 +137,7 @@ def _parse_item_line(line: str) -> dict:
         name_raw = m.group(1).strip()
         spec = m.group(2).strip()
         unit = m.group(3)
-        qty = int(m.group(4))
+        qty = float(m.group(4))
         unit_price = float(m.group(5))
         amount = float(m.group(6))
         tax_rate_str = m.group(7) or ''
@@ -182,7 +160,7 @@ def _parse_item_line(line: str) -> dict:
             'material_name': mat_name,
             'specification': spec,
             'unit': unit,
-            'quantity': qty,
+            'quantity': int(qty) if qty.is_integer() else qty,
             'unit_price_excl': round(unit_price, 13),
             'amount_excl': round(amount, 2),
             'tax_rate': tax_rate,
@@ -190,3 +168,39 @@ def _parse_item_line(line: str) -> dict:
         }
 
     return None
+
+
+def _extract_items(all_text: str) -> list:
+    """Extract invoice item rows, including wrapped specification lines."""
+    lines = all_text.split('\n')
+    in_items = False
+    items = []
+
+    for line in lines:
+        stripped = line.strip()
+        if re.search(r'项目名称.*规格型号.*单\s*位.*数\s*量.*单\s*价.*金\s*额', stripped):
+            in_items = True
+            continue
+        if not in_items:
+            continue
+        if re.match(r'^\s*合\s*计', stripped) or re.search(r'价税合计|备\s*注|开票人', stripped):
+            break
+        if not stripped:
+            continue
+
+        parsed = _parse_item_line(stripped)
+        if parsed:
+            items.append(parsed)
+            continue
+
+        if items and _is_spec_continuation(stripped):
+            items[-1]['specification'] = f"{items[-1]['specification']}{stripped}"
+
+    return items
+
+
+def _is_spec_continuation(line: str) -> bool:
+    """Return True when a short wrapped line is likely a specification suffix."""
+    if re.search(r'[¥￥]|\d+\s*%|^\s*合\s*计', line):
+        return False
+    return bool(re.match(r'^[A-Za-z0-9.][A-Za-z0-9/·\-\.]*$', line))

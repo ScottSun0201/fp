@@ -6,6 +6,15 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = BASE_DIR / 'uploads'
 DB_PATH = BASE_DIR / 'fp_system.db'
+DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite').lower()
+MYSQL_CONFIG = {
+    'host': os.environ.get('FP_DB_HOST', '127.0.0.1'),
+    'port': int(os.environ.get('FP_DB_PORT', '3306')),
+    'user': os.environ.get('FP_DB_USER', ''),
+    'password': os.environ.get('FP_DB_PASSWORD', ''),
+    'database': os.environ.get('FP_DB_NAME', 'fp'),
+    'charset': 'utf8mb4',
+}
 
 UPLOAD_DIR.mkdir(exist_ok=True)
 

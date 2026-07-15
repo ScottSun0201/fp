@@ -18,6 +18,7 @@
 
 import sqlite3
 import logging
+from itertools import combinations
 from datetime import datetime, date
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
@@ -148,7 +149,7 @@ def calculate_amount_score(inv_amount, stm_amount):
     return float(score.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
-def calculate_material_score(inv_spec, stm_customer_code, conn):
+def calculate_material_score(inv_spec, stm_customer_code, conn, stm_product_name=""):
     """
     计算物料映射匹配分数（0 或 100）。
 
@@ -176,8 +177,16 @@ def calculate_material_score(inv_spec, stm_customer_code, conn):
 
     inv_spec_str = str(inv_spec).strip()
     stm_code_str = str(stm_customer_code).strip()
+    stm_product_str = str(stm_product_name or "").strip()
 
-    if not inv_spec_str or not stm_code_str:
+    if not inv_spec_str:
+        return 0.0
+
+    if stm_product_str and inv_spec_str.upper() == stm_product_str.upper():
+        logger.debug("物料评分: 规格与商品名称直接匹配成功 [%s]", inv_spec_str)
+        return 100.0
+
+    if not stm_code_str:
         return 0.0
 
     try:
@@ -488,6 +497,81 @@ def _build_difference_reason(amount_score, material_score, quantity_score, date_
     return "; ".join(reasons) if reasons else None
 
 
+def _sum_decimal(rows, key):
+    total = Decimal("0")
+    for row in rows:
+        total += _to_decimal(_safe_get(row, key, 0)) or Decimal("0")
+    return total
+
+
+def _same_money(left, right):
+    left_dec = _to_decimal(left) or Decimal("0")
+    right_dec = _to_decimal(right) or Decimal("0")
+    tolerance = _to_decimal(AMOUNT_TOLERANCE) or Decimal("0.02")
+    return abs(left_dec - right_dec) <= tolerance
+
+
+def _best_date_score(invoice_date, stm_rows):
+    scores = [calculate_date_score(invoice_date, _safe_get(row, "delivery_date")) for row in stm_rows]
+    return max(scores) if scores else 0.0
+
+
+def _aggregate_material_score(inv_spec, stm_rows, conn):
+    if not stm_rows:
+        return 0.0
+    scores = [
+        calculate_material_score(
+            inv_spec,
+            _safe_get(row, "customer_material_code", ""),
+            conn,
+            _safe_get(row, "product_name", ""),
+        )
+        for row in stm_rows
+    ]
+    return max(scores) if scores else 0.0
+
+
+def _find_statement_subset_for_invoice(conn, inv_item, stm_items, used_stm, invoice_date):
+    available = [(idx, row) for idx, row in enumerate(stm_items) if idx not in used_stm]
+    if len(available) < 2:
+        return None
+
+    inv_amount = _to_decimal(_safe_get(inv_item, "amount_incl", 0)) or Decimal("0")
+    inv_qty = _to_decimal(_safe_get(inv_item, "quantity", 0)) or Decimal("0")
+    inv_spec = _safe_get(inv_item, "specification") or _safe_get(inv_item, "material_name", "")
+    max_subset_size = min(len(available), 8)
+
+    for subset_size in range(2, max_subset_size + 1):
+        candidates = []
+        for combo in combinations(available, subset_size):
+            indexes = [idx for idx, _ in combo]
+            rows = [row for _, row in combo]
+            stm_amount = _sum_decimal(rows, "amount_incl_tax")
+            stm_qty = _sum_decimal(rows, "quantity")
+            if not _same_money(inv_amount, stm_amount):
+                continue
+            amt_score = 100.0
+            qty_score = calculate_quantity_score(inv_qty, stm_qty)
+            mat_score = _aggregate_material_score(inv_spec, rows, conn)
+            dt_score = _best_date_score(invoice_date, rows)
+            total = _calculate_weighted_score(amt_score, mat_score, qty_score, dt_score)
+            candidates.append({
+                "total_score": total,
+                "stm_indexes": indexes,
+                "statement_rows": rows,
+                "amount_score": amt_score,
+                "material_score": mat_score,
+                "quantity_score": qty_score,
+                "date_score": dt_score,
+                "difference_amount": float((inv_amount - stm_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+            })
+        if candidates:
+            candidates.sort(key=lambda item: item["total_score"], reverse=True)
+            return candidates[0]
+
+    return None
+
+
 # ===================================================================
 # 主匹配函数
 # ===================================================================
@@ -560,12 +644,49 @@ def match_invoice_statement(conn, invoice_id, statement_id):
         statement_period, len(stm_items),
     )
 
+    used_inv = set()   # 已匹配的发票明细索引
+    used_stm = set()   # 已匹配的对账单明细索引
+    matched_pairs = []  # 最终配对结果
+
     # ------------------------------------------------------------------
-    # 3. 全量交叉评分（发票明细 × 对账单明细）
+    # 3. 汇总匹配（发票单行 × 对账单多行）
+    # ------------------------------------------------------------------
+    for i, inv_item in enumerate(inv_items):
+        aggregate = _find_statement_subset_for_invoice(conn, inv_item, stm_items, used_stm, invoice_date)
+        if not aggregate:
+            continue
+
+        used_inv.add(i)
+        used_stm.update(aggregate["stm_indexes"])
+        stm_ids = [
+            str(_safe_get(row, "item_id"))
+            for row in aggregate["statement_rows"]
+            if _safe_get(row, "item_id") is not None
+        ]
+        matched_pairs.append({
+            "total_score": aggregate["total_score"],
+            "inv_idx": i,
+            "stm_idx": None,
+            "amount_score": aggregate["amount_score"],
+            "material_score": aggregate["material_score"],
+            "quantity_score": aggregate["quantity_score"],
+            "date_score": aggregate["date_score"],
+            "match_level": _determine_match_level(aggregate["total_score"]),
+            "difference_amount": aggregate["difference_amount"],
+            "difference_reason": f"汇总匹配: 发票1行对应对账单{len(stm_ids)}行(statement_item_id={','.join(stm_ids)})",
+            "inv_item": inv_item,
+            "stm_item": None,
+            "statement_item_ids": stm_ids,
+        })
+
+    # ------------------------------------------------------------------
+    # 4. 全量交叉评分（剩余发票明细 × 剩余对账单明细）
     # ------------------------------------------------------------------
     all_pairs = []
 
     for i, inv_item in enumerate(inv_items):
+        if i in used_inv:
+            continue
         # 发票含税金额 = 不含税金额 + 税额
         inv_amount = _safe_get(inv_item, "amount_incl", 0)
         # 物料规格：优先取 specification，其次取 material_name
@@ -573,14 +694,17 @@ def match_invoice_statement(conn, invoice_id, statement_id):
         inv_qty = _safe_get(inv_item, "quantity", 0)
 
         for j, stm_item in enumerate(stm_items):
+            if j in used_stm:
+                continue
             stm_amount = _safe_get(stm_item, "amount_incl_tax", 0)
             stm_customer_code = _safe_get(stm_item, "customer_material_code", "")
+            stm_product_name = _safe_get(stm_item, "product_name", "")
             stm_qty = _safe_get(stm_item, "quantity", 0)
             stm_delivery_date = _safe_get(stm_item, "delivery_date")
 
             # 四级评分
             amt_score = calculate_amount_score(inv_amount, stm_amount)
-            mat_score = calculate_material_score(inv_spec, stm_customer_code, conn)
+            mat_score = calculate_material_score(inv_spec, stm_customer_code, conn, stm_product_name)
             qty_score = calculate_quantity_score(inv_qty, stm_qty)
             dt_score = calculate_date_score(invoice_date, stm_delivery_date)
 
@@ -607,13 +731,9 @@ def match_invoice_statement(conn, invoice_id, statement_id):
             })
 
     # ------------------------------------------------------------------
-    # 4. 贪心最优匹配（每条明细最多匹配一次，优先选取高分配对）
+    # 5. 贪心最优匹配（每条明细最多匹配一次，优先选取高分配对）
     # ------------------------------------------------------------------
     all_pairs.sort(key=lambda p: p["total_score"], reverse=True)
-
-    used_inv = set()   # 已匹配的发票明细索引
-    used_stm = set()   # 已匹配的对账单明细索引
-    matched_pairs = []  # 最终配对结果
 
     for pair in all_pairs:
         i_idx = pair["inv_idx"]
@@ -627,7 +747,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
         matched_pairs.append(pair)
 
     # ------------------------------------------------------------------
-    # 5. 收集未匹配的明细行，标记为 unmatched
+    # 6. 收集未匹配的明细行，标记为 unmatched
     # ------------------------------------------------------------------
     for i, inv_item in enumerate(inv_items):
         if i not in used_inv:
@@ -664,7 +784,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
             })
 
     # ------------------------------------------------------------------
-    # 6. 写入 rcn_reconciliation 表
+    # 7. 写入 rcn_reconciliation 表
     # ------------------------------------------------------------------
     auto_count = 0
     suggest_count = 0
@@ -672,6 +792,11 @@ def match_invoice_statement(conn, invoice_id, statement_id):
     output_results = []
 
     try:
+        conn.execute(
+            "DELETE FROM rcn_reconciliation WHERE invoice_id = ? AND statement_id = ?",
+            (invoice_id, statement_id),
+        )
+
         for pair in matched_pairs:
             inv_item = pair["inv_item"]
             stm_item = pair["stm_item"]
@@ -689,7 +814,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
             stm_item_id = _safe_get(stm_item, "item_id") if stm_item else None
 
             # 生成分歧原因描述
-            diff_reason = _build_difference_reason(
+            diff_reason = pair.get("difference_reason") or _build_difference_reason(
                 pair["amount_score"],
                 pair["material_score"],
                 pair["quantity_score"],
@@ -717,6 +842,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
             output_results.append({
                 "invoice_item_id": inv_item_id,
                 "statement_item_id": stm_item_id,
+                "statement_item_ids": pair.get("statement_item_ids", []),
                 "inv_material": _safe_get(inv_item, "material_name", "") if inv_item else "",
                 "stm_product": _safe_get(stm_item, "product_name", "") if stm_item else "",
                 "amount_score": pair["amount_score"],

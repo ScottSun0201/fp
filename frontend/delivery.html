@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>快递对账 - LWFP</title>
+  <style>
+    :root{--bg:#f7f9fd;--panel:#fff;--line:#d8dde6;--text:#162033;--muted:#667085;--blue:#3478ff;--soft:#edf3ff;--bad:#b42318;--warn:#b54708}*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;overflow:hidden}.shell{height:100vh;display:grid;grid-template-columns:224px minmax(0,1fr);gap:20px;padding:20px;overflow:hidden}.side,.panel,.top{background:#fff;border:1px solid var(--line);border-radius:8px}.side{height:calc(100vh - 40px);padding:28px 24px;position:relative;overflow:hidden}.main{height:calc(100vh - 40px);min-width:0;display:flex;flex-direction:column;overflow:auto}.brand{font-size:28px;font-weight:850;color:#2765d8}.sub,.muted{color:var(--muted);font-size:13px}.menu-title{margin-top:42px;color:var(--muted);font-size:12px}.nav{position:relative;margin-top:14px;padding-left:28px}.nav:before{content:"";position:absolute;left:10px;top:8px;bottom:8px;border-left:2px solid var(--blue)}.nav a{display:block;height:46px;line-height:46px;color:var(--text);text-decoration:none;font-weight:700}.nav a:before{content:"";display:inline-block;width:28px;border-top:2px solid var(--blue);vertical-align:middle;margin:0 10px 0 -18px}.nav a.active{background:var(--soft);color:#2765d8;border-radius:6px;padding-left:8px}.logout{position:absolute;left:32px;right:32px;bottom:32px;height:40px;background:var(--blue);color:#fff;border-radius:6px;text-align:center;line-height:40px;text-decoration:none;font-weight:800}.top{height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:20px}.panel{padding:22px;margin-top:16px}.grid{display:grid;grid-template-columns:minmax(360px,520px);gap:14px;align-items:end}.field{display:grid;gap:7px}.field label{font-size:13px;color:var(--muted);font-weight:800}.file{min-height:86px;border:1px dashed #9fb2d8;background:#f8fbff;border-radius:8px;padding:14px;display:grid;gap:8px;align-content:center}.file input{width:100%}input,select{height:38px;border:1px solid #aeb8c8;border-radius:6px;padding:0 10px;background:#fff}.btn{height:38px;border:0;border-radius:6px;padding:0 16px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer}.link-btn{border:0;background:transparent;color:#2765d8;font-weight:800;cursor:pointer;padding:0 8px}.actions{display:flex;gap:12px;align-items:center;margin-top:20px;flex-wrap:wrap}.status{font-size:13px;color:var(--muted)}.status.bad{color:var(--bad)}.history-note{margin-top:12px;color:var(--warn);font-size:13px;font-weight:800}.table-wrap{overflow:auto;border:1px solid #e4e9f4;border-radius:6px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid #e4e9f4;padding:10px;text-align:left;white-space:nowrap}th{background:#f2f4f7;color:var(--muted)}tr.detail-row td{background:#f8fbff}a{color:#2765d8;text-decoration:none;font-weight:800}
+  </style>
+</head>
+<body><div class="shell"><aside class="side"><div class="brand">LWFP</div><div class="sub">协议发票对账系统</div><div class="menu-title">主菜单</div><nav class="nav"><a href="/">首页</a><a href="/management">对账管理</a><a href="/management?status=ERP_FAILED">异常处理</a><a class="active" href="/delivery">快递对账</a><a href="javascript:void(0)">系统设置</a><a href="javascript:void(0)">操作日志</a></nav><a class="logout" href="/logout">退出</a></aside>
+<main class="main"><section class="top"><h1>快递对账</h1><span class="muted">管理员 · admin</span></section>
+<section class="panel">
+  <form id="form">
+    <div class="grid">
+      <div class="field file"><label>快递对账单</label><input id="statement" name="statement" type="file" accept=".xlsx" required></div>
+    </div>
+    <div id="historyNote" class="history-note"></div>
+    <div class="actions"><button id="run" class="btn" type="submit">开始对账</button><a class="btn" href="/api/delivery/template">下载模板</a><span id="status" class="status">请使用快递对账模板填写后上传；月份从模板读取，未填默认上个月。</span></div>
+  </form>
+</section>
+<section class="panel"><h2>历史记录</h2><div class="table-wrap"><table><thead><tr><th>时间</th><th>月份</th><th>文件</th><th>账单数</th><th>匹配</th><th>仅账单</th><th>仅系统</th><th>操作</th></tr></thead><tbody id="historyRows"></tbody></table></div></section>
+</main></div>
+<script>
+async function checkHistory(){
+  const file=document.getElementById('statement').files[0], note=document.getElementById('historyNote');
+  note.textContent='';
+  if(file)note.textContent='已选择文件，系统会从模板读取唯一标识、对账月份和填写日期。';
+}
+async function loadHistory(){
+  const r=await fetch('/api/delivery/history');
+  if(!r.ok)return;
+  const d=await r.json();
+  document.getElementById('historyRows').innerHTML=(d.rows||[]).map(x=>`<tr><td>${x.created_at||''}</td><td>${x.statement_month||''}</td><td>${x.original_filename}</td><td>${x.statement_count}</td><td>${x.matched_count}</td><td>${x.only_statement_count}</td><td>${x.only_system_count}</td><td><button class="link-btn" onclick="toggleDetail(${x.id}, this)">详情</button><a href="${x.download_url}">下载全部</a></td></tr><tr id="detail-${x.id}" class="detail-row" style="display:none"><td colspan="8" class="muted">加载中...</td></tr>`).join('')||'<tr><td colspan="8" class="muted">暂无历史记录</td></tr>';
+}
+async function toggleDetail(id, btn){
+  const row=document.getElementById(`detail-${id}`);
+  if(row.style.display==='table-row'){row.style.display='none';btn.textContent='详情';return}
+  row.style.display='table-row';btn.textContent='收起';
+  const r=await fetch(`/api/delivery/history/${id}/detail`);
+  if(!r.ok){row.innerHTML='<td colspan="8" class="status bad">详情加载失败</td>';return}
+  const d=await r.json(), items=d.rows||[];
+  row.innerHTML=`<td colspan="8"><table><thead><tr><th>公司</th><th>月份</th><th>账单数</th><th>匹配</th><th>仅账单</th><th>仅系统</th><th>历史次数</th><th>操作</th></tr></thead><tbody>${items.map(x=>`<tr><td>${x.company}</td><td>${x.month}</td><td>${x.statement_count}</td><td>${x.matched_count}</td><td>${x.only_statement_count}</td><td>${x.only_system_count}</td><td>${x.history_before}</td><td><a href="${x.download_url}">下载</a></td></tr>`).join('')||'<tr><td colspan="8" class="muted">暂无详情</td></tr>'}</tbody></table></td>`;
+}
+document.getElementById('statement').onchange=checkHistory;
+document.getElementById('form').onsubmit=async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('run'), status=document.getElementById('status');
+  btn.disabled=true; status.className='status'; status.textContent='正在对账，结果生成后会自动下载...';
+  try{
+    const r=await fetch('/api/delivery/reconcile',{method:'POST',body:new FormData(e.currentTarget)});
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||'快递对账失败')}
+    const before=Number(r.headers.get('X-Delivery-History-Before')||0);
+    const blob=await r.blob();
+    const cd=r.headers.get('Content-Disposition')||'';
+    const m=cd.match(/filename\\*=UTF-8''([^;]+)|filename="?([^"]+)"?/);
+    const name=m?decodeURIComponent(m[1]||m[2]):'快递对账结果.xlsx';
+    const url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url);
+    status.textContent=before>0?`对账完成。这个账单之前已对过 ${before} 次。`:'对账完成';
+    await loadHistory();
+    await checkHistory();
+  }catch(err){status.className='status bad'; status.textContent=err.message}
+  finally{btn.disabled=false}
+};
+loadHistory();
+</script></body></html>
