@@ -16,13 +16,21 @@
 结果写入 rcn_reconciliation 表。
 """
 
-import sqlite3
 import logging
 from itertools import combinations
 from datetime import datetime, date
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from config import MATCH_SCORE_THRESHOLD, AMOUNT_TOLERANCE
+
+# 尝试导入反馈引擎（可选依赖）
+try:
+    from feedback_engine import calculate_feedback_bonus
+    HAS_FEEDBACK = True
+except ImportError:
+    HAS_FEEDBACK = False
+    def calculate_feedback_bonus(*args, **kwargs):
+        return 0.0
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +97,7 @@ def _to_date(value):
 
 def _safe_get(row, key, default=None):
     """
-    从 sqlite3.Row 中安全取值，键不存在或值为 None 时返回默认值。
+    从数据库行中安全取值，键不存在或值为 None 时返回默认值。
     """
     if row is None:
         return default
@@ -163,7 +171,7 @@ def calculate_material_score(inv_spec, stm_customer_code, conn, stm_product_name
     Args:
         inv_spec:          发票上的物料规格 (specification) 或物料名称
         stm_customer_code: 对账单上的客户物料编码 (customer_material_code)
-        conn:              sqlite3 数据库连接
+        conn:              数据库连接
 
     Returns:
         float: 0.0 或 100.0
@@ -228,7 +236,7 @@ def calculate_material_score(inv_spec, stm_customer_code, conn, stm_product_name
         logger.debug("物料评分: 未找到映射 [%s → %s]", stm_code_str, inv_spec_str)
         return 0.0
 
-    except sqlite3.Error as exc:
+    except Exception as exc:
         logger.error("物料评分: 数据库查询异常 - %s", exc)
         return 0.0
 
@@ -590,7 +598,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
       7. 返回汇总结果
 
     Args:
-        conn:         sqlite3 连接（row_factory = sqlite3.Row）
+        conn:         数据库连接（row_factory = sqlite3.Row）
         invoice_id:   发票主表 ID（inv_invoice.id）
         statement_id: 对账单主表 ID（stm_statement.id）
 
@@ -609,7 +617,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
 
     Raises:
         ValueError:    发票或对账单不存在 / 无明细行
-        sqlite3.Error: 数据库操作异常
+        Exception: 数据库操作异常
     """
 
     # ------------------------------------------------------------------
@@ -708,7 +716,21 @@ def match_invoice_statement(conn, invoice_id, statement_id):
             qty_score = calculate_quantity_score(inv_qty, stm_qty)
             dt_score = calculate_date_score(invoice_date, stm_delivery_date)
 
+            # 反馈加分：基于历史人工确认给予额外加分（0-20分）
+            feedback_bonus = 0.0
+            if HAS_FEEDBACK:
+                inv_material_name = _safe_get(inv_item, "material_name", "")
+                supplier_code = _safe_get(statement, "supplier_code", "")
+                feedback_bonus = calculate_feedback_bonus(
+                    inv_material_name=inv_material_name,
+                    inv_specification=inv_spec,
+                    stm_customer_code=stm_customer_code,
+                    supplier_code=supplier_code
+                )
+
             total = _calculate_weighted_score(amt_score, mat_score, qty_score, dt_score)
+            # 加上反馈加分（上限100分）
+            total = min(100.0, total + feedback_bonus)
             level = _determine_match_level(total)
 
             # 计算金额差异
@@ -724,6 +746,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
                 "material_score": mat_score,
                 "quantity_score": qty_score,
                 "date_score": dt_score,
+                "feedback_bonus": feedback_bonus,
                 "match_level": level,
                 "difference_amount": diff_amount,
                 "inv_item": inv_item,
@@ -849,6 +872,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
                 "material_score": pair["material_score"],
                 "quantity_score": pair["quantity_score"],
                 "date_score": pair["date_score"],
+                "feedback_bonus": pair.get("feedback_bonus", 0.0),
                 "total_score": pair["total_score"],
                 "match_level": level,
                 "difference_amount": pair["difference_amount"],
@@ -862,7 +886,7 @@ def match_invoice_statement(conn, invoice_id, statement_id):
             auto_count, suggest_count, unmatched_count,
         )
 
-    except sqlite3.Error as exc:
+    except Exception as exc:
         conn.rollback()
         logger.error("匹配结果写入失败，已回滚: %s", exc)
         raise

@@ -7,11 +7,13 @@ services:
       dockerfile: Dockerfile
     container_name: fp-app
     ports:
-      - "5050:5050"
+      - "8090:8090"
     volumes:
       - ./backend/uploads:/app/uploads
       - ./backend/data:/app/data
     environment:
-      - PORT=5050
+      - PORT=8090
       - SECRET_KEY=fp-prod-secret-change-me
+    env_file:
+      - ./backend/.env
     restart: unless-stopped

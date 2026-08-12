@@ -4,30 +4,814 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>对账管理 - LWFP</title>
   <style>
-    :root{--bg:#f7f9fd;--panel:#fff;--line:#d8dde6;--text:#162033;--muted:#667085;--blue:#3478ff;--soft:#edf3ff;--ok:#0f7a4f;--bad:#b42318;--warn:#b54708}*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;overflow:hidden}.shell{height:100vh;display:grid;grid-template-columns:224px minmax(0,1fr);gap:20px;padding:20px;overflow:hidden}.side,.panel,.top{background:#fff;border:1px solid var(--line);border-radius:8px}.side{height:calc(100vh - 40px);padding:28px 24px;position:relative;overflow:hidden}.main{height:calc(100vh - 40px);min-width:0;display:flex;flex-direction:column;overflow:hidden}.brand{font-size:28px;font-weight:850;color:#2765d8}.sub,.muted{color:var(--muted);font-size:13px}.menu-title{margin-top:42px;color:var(--muted);font-size:12px}.nav{position:relative;margin-top:14px;padding-left:28px}.nav:before{content:"";position:absolute;left:10px;top:8px;bottom:8px;border-left:2px solid var(--blue)}.nav a{display:block;height:46px;line-height:46px;color:var(--text);text-decoration:none;font-weight:700}.nav a:before{content:"";display:inline-block;width:28px;border-top:2px solid var(--blue);vertical-align:middle;margin:0 10px 0 -18px}.nav a.active{background:var(--soft);color:#2765d8;border-radius:6px;padding-left:8px}.logout{position:absolute;left:32px;right:32px;bottom:32px;height:40px;background:var(--blue);color:#fff;border-radius:6px;text-align:center;line-height:40px;text-decoration:none;font-weight:800}.top{height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:20px}.btn{height:34px;border:0;border-radius:6px;padding:0 13px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}.btn.secondary{background:var(--soft);color:#2765d8}.btn.ghost{background:#fff;color:#2765d8;border:1px solid #b8c7e6}.btn:disabled{opacity:.45;cursor:not-allowed}.panel{padding:16px;margin-top:14px}.filter-panel{padding:14px 16px}.filters{display:grid;grid-template-columns:110px repeat(9,minmax(112px,1fr)) auto auto;gap:10px}input,select{height:34px;border:1px solid #aeb8c8;border-radius:6px;padding:0 10px;background:#fff}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #e4e9f4;padding:10px 10px;text-align:left;white-space:nowrap}.detail-table-wrap th,.detail-table-wrap td,.history-table-wrap th,.history-table-wrap td,.table-wrap th,.table-wrap td{border:1px solid #dfe6f2}th{background:#f2f4f7;color:var(--muted);position:sticky;top:0;z-index:1}a{color:#2765d8;text-decoration:none;font-weight:800}.ok{color:var(--ok);font-weight:800}.bad{color:var(--bad);font-weight:800}.warn{color:var(--warn);font-weight:800}.blueText{color:#2765d8;font-weight:800}.record-panel{min-height:0;flex:1;display:flex;flex-direction:column}.record-head{display:flex;justify-content:space-between;align-items:center;flex:0 0 34px}.record-head h2{margin:0;font-size:18px}.table-wrap{min-height:0;flex:1;overflow:auto;border:1px solid #e4e9f4;border-radius:6px}.table-wrap table th:first-child,.table-wrap table td:first-child{padding-left:14px}.key-cell{max-width:170px;overflow:hidden;text-overflow:ellipsis}.pager{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap;flex:0 0 auto}.pager select,.pager input{width:76px}.upload-dialog{position:relative;z-index:1001;width:min(560px,calc(100vw - 48px));background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;box-shadow:0 18px 50px rgba(16,24,40,.18)}.upload-form{display:grid;gap:14px}.file-drop{min-height:118px;display:grid;place-items:center;text-align:center;gap:8px;border:1px dashed #9fb2d8;background:#f8fbff;border-radius:8px;padding:18px;cursor:pointer}.file-drop input{display:none}.file-drop strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#344054}.file-drop small{color:var(--muted)}.upload-meta{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px}.upload-meta .field input{width:100%}.date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.upload-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.upload-progress{display:none}.upload-progress.open{display:block}.progress-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;color:var(--muted)}.progress-track{height:8px;border-radius:999px;background:#e4e9f4;overflow:hidden}.progress-bar{height:100%;width:0;background:var(--blue);transition:width .2s ease}.progress-detail{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.4}.modal{display:none;position:fixed;inset:0;background:rgba(16,24,40,.28);align-items:flex-start;justify-content:center;padding:64px 24px 24px;z-index:1000}.modal.open{display:flex}#invoiceModal{z-index:1100}.dialog{position:relative;z-index:1001;width:min(1180px,calc(100vw - 64px));height:min(720px,calc(100vh - 96px));overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column}.dialog-head{height:44px;flex:0 0 44px;display:flex;justify-content:space-between;align-items:center}.dialog-head h2{margin:0;font-size:20px}.detail-summary{flex:0 0 auto;line-height:22px;min-height:22px;margin-top:2px}.detail-files{flex:0 0 auto;margin:12px 0}.tabs{flex:0 0 auto;display:flex;gap:8px;margin-bottom:10px}.tab{height:32px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--text);padding:0 14px;font-weight:800;cursor:pointer}.tab.active{background:var(--blue);border-color:var(--blue);color:#fff}.tab-panel{min-height:0;flex:1;display:none;overflow:hidden}.tab-panel.active{display:flex}.record-step.active{display:block;overflow:auto}.detail-table-wrap{min-height:0;flex:1;overflow:auto;border:1px solid #e4e9f4;border-radius:6px;background:#fff}.detail-table-wrap table{min-width:1040px}.recognition-table{min-width:1160px}.detail-table-wrap td:last-child{white-space:normal;min-width:320px;line-height:20px}.recognition-table td:last-child{white-space:nowrap;min-width:auto}.detail-actions{flex:0 0 auto;margin-top:12px}.invoice-dialog{position:relative;z-index:1001;width:min(760px,calc(100vw - 48px));background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;box-shadow:0 18px 50px rgba(16,24,40,.18)}.invoice-context{display:grid;grid-template-columns:1.2fr 1.1fr .8fr;gap:10px;margin:4px 0 14px}.invoice-context div,.invoice-check-grid div{border:1px solid #dfe6f2;border-radius:6px;background:#f8fbff;padding:10px 12px;min-width:0}.invoice-context span,.invoice-check-grid span{display:block;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:5px}.invoice-context strong,.invoice-check-grid strong{display:block;font-size:16px;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.invoice-form{display:grid;gap:14px}.invoice-upload-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #dfe6f2;border-radius:6px;padding:10px;background:#fff}.compact-file{min-width:0;display:flex;gap:10px;align-items:center;cursor:pointer}.compact-file input{display:none}.compact-file strong{min-width:0;color:#344054;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.invoice-section{border:1px solid #dfe6f2;border-radius:6px;padding:12px;background:#fff}.invoice-section h3{margin:0 0 10px;font-size:15px}.invoice-grid,.invoice-check-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.invoice-check-grid{grid-template-columns:1fr 1fr 1fr 1fr}.field{display:grid;gap:6px}.field label{font-size:12px;color:var(--muted);font-weight:800}.invoice-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.invoice-progress{display:none}.invoice-progress.open{display:block}.history-dialog{position:relative;z-index:1001;width:min(980px,calc(100vw - 64px));height:min(620px,calc(100vh - 96px));overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column}.history-table-wrap{min-height:0;flex:1;overflow:auto;border:1px solid #e4e9f4;border-radius:6px}.compare-table{min-width:980px}.compare-cell{min-width:128px}.pair{display:grid;gap:4px;line-height:18px}.pair div{display:flex;gap:8px;align-items:center}.pair b{width:42px;color:var(--muted);font-weight:700}.issue-cell{white-space:normal;min-width:240px;line-height:20px}.actions{display:flex;gap:10px;flex-wrap:wrap}
-  </style>
+    :root{--bg:#f7f9fd;--panel:#fff;--line:#d8dde6;--text:#162033;--muted:#667085;--blue:#3478ff;--soft:#edf3ff;--ok:#0f7a4f;--bad:#b42318;--warn:#b54708}*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;overflow:hidden}.shell{height:100vh;display:grid;grid-template-columns:224px minmax(0,1fr);gap:20px;padding:20px;overflow:hidden}.side,.panel,.top{background:#fff;border:1px solid var(--line);border-radius:8px}.side{height:calc(100vh - 40px);padding:28px 24px;position:relative;overflow:hidden}.main{height:calc(100vh - 40px);min-width:0;display:flex;flex-direction:column;overflow:hidden}.brand{font-size:28px;font-weight:850;color:#2765d8}.sub,.muted{color:var(--muted);font-size:13px}.menu-title{margin-top:42px;color:var(--muted);font-size:12px}.nav{position:relative;margin-top:14px;padding-left:28px}.nav:before{content:"";position:absolute;left:10px;top:8px;bottom:8px;border-left:2px solid var(--blue)}.nav a{display:block;height:46px;line-height:46px;color:var(--text);text-decoration:none;font-weight:700}.nav a:before{content:"";display:inline-block;width:28px;border-top:2px solid var(--blue);vertical-align:middle;margin:0 10px 0 -18px}.nav a.active{background:var(--soft);color:#2765d8;border-radius:6px;padding-left:8px}.logout{position:absolute;left:32px;right:32px;bottom:32px;height:40px;background:var(--blue);color:#fff;border-radius:6px;text-align:center;line-height:40px;text-decoration:none;font-weight:800}.top{height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:20px}.btn{height:34px;border:0;border-radius:6px;padding:0 13px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}.btn.secondary{background:var(--soft);color:#2765d8}.btn.ghost{background:#fff;color:#2765d8;border:1px solid #b8c7e6}.btn:disabled{opacity:.45;cursor:not-allowed}.panel{padding:16px;margin-top:14px}.filter-panel{padding:14px 16px}.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.filters .wide{grid-column:span 2}input,select{height:34px;border:1px solid #aeb8c8;border-radius:6px;padding:0 10px;background:#fff}.status-checks{min-height:34px;border:1px solid #aeb8c8;border-radius:6px;background:#fff;padding:5px 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.status-checks label{display:inline-flex;align-items:center;gap:4px;font-size:13px;line-height:20px;white-space:nowrap;cursor:pointer}.status-checks input{width:14px;height:14px;margin:0;padding:0}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #e4e9f4;padding:10px 10px;text-align:left;white-space:nowrap}.detail-table-wrap th,.detail-table-wrap td,.history-table-wrap th,.history-table-wrap td,.table-wrap th,.table-wrap td{border:1px solid #dfe6f2}th{background:#f2f4f7;color:var(--muted);position:sticky;top:0;z-index:1}a{color:#2765d8;text-decoration:none;font-weight:800}.ok{color:var(--ok);font-weight:800}.bad{color:var(--bad);font-weight:800}.warn{color:var(--warn);font-weight:800}.blueText{color:#2765d8;font-weight:800}.record-panel{min-height:0;flex:1;display:flex;flex-direction:column}.record-head{display:flex;justify-content:space-between;align-items:center;flex:0 0 34px}.record-head h2{margin:0;font-size:18px}.table-wrap{min-height:0;flex:1;overflow:auto;border:1px solid #e4e9f4;border-radius:6px}.table-wrap table th:first-child,.table-wrap table td:first-child{padding-left:14px}.key-cell{max-width:170px;overflow:hidden;text-overflow:ellipsis}.pager{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap;flex:0 0 auto}.pager select,.pager input{width:76px}.upload-dialog{position:relative;z-index:1001;width:min(560px,calc(100vw - 48px));background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;box-shadow:0 18px 50px rgba(16,24,40,.18)}.upload-form{display:grid;gap:14px}.file-drop{min-height:118px;display:grid;place-items:center;text-align:center;gap:8px;border:1px dashed #9fb2d8;background:#f8fbff;border-radius:8px;padding:18px;cursor:pointer}.file-drop input{display:none}.file-drop strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#344054}.file-drop small{color:var(--muted)}.upload-meta{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px}.upload-meta .field input,.upload-meta .field select{width:100%}.date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.upload-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.upload-progress{display:none}.upload-progress.open{display:block}.progress-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;color:var(--muted)}.progress-track{height:8px;border-radius:999px;background:#e4e9f4;overflow:hidden}.progress-bar{height:100%;width:0;background:var(--blue);transition:width .2s ease}.progress-detail{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.4}.modal{display:none;position:fixed;inset:0;background:rgba(16,24,40,.28);align-items:flex-start;justify-content:center;padding:64px 24px 24px;z-index:1000}.modal.open{display:flex}#invoiceModal{z-index:1100}.dialog{position:relative;z-index:1001;width:min(1180px,calc(100vw - 64px));height:min(720px,calc(100vh - 96px));overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column}.dialog-head{height:44px;flex:0 0 44px;display:flex;justify-content:space-between;align-items:center}.dialog-head h2{margin:0;font-size:20px}.detail-summary{flex:0 0 auto;line-height:22px;min-height:22px;margin-top:2px}.detail-files{flex:0 0 auto;margin:12px 0}.tabs{flex:0 0 auto;display:flex;gap:8px;margin-bottom:10px}.tab{height:32px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--text);padding:0 14px;font-weight:800;cursor:pointer}.tab.active{background:var(--blue);border-color:var(--blue);color:#fff}.tab-panel{min-height:0;flex:1;display:none;overflow:hidden}.tab-panel.active{display:flex}.record-step.active{display:block;overflow:auto}.detail-table-wrap{min-height:0;flex:1;overflow:auto;border:1px solid #e4e9f4;border-radius:6px;background:#fff}.detail-table-wrap table{min-width:1040px}.recognition-table{min-width:1160px}.compare-table{table-layout:fixed;min-width:1080px}.compare-table th:nth-child(1),.compare-table td:nth-child(1){width:112px}.compare-table th:nth-child(2),.compare-table td:nth-child(2){width:96px}.compare-table th:nth-child(3),.compare-table td:nth-child(3){width:146px}.compare-table th:nth-child(4),.compare-table td:nth-child(4){width:126px}.compare-table th:nth-child(5),.compare-table td:nth-child(5){width:126px}.compare-table th:nth-child(6),.compare-table td:nth-child(6){width:126px}.compare-table th:nth-child(7),.compare-table td:nth-child(7){width:96px}.compare-table th:nth-child(8),.compare-table td:nth-child(8){width:180px;white-space:normal;line-height:20px}.compare-table th:last-child,.compare-table td:last-child{position:sticky;right:0;width:72px;min-width:72px;max-width:72px;background:#fff;text-align:center;z-index:12;box-shadow:-1px 0 0 #dfe6f2}.compare-table th:last-child{top:0;background:#f2f4f7;z-index:20}.compare-table td:last-child{z-index:12}.recognition-table td:last-child{white-space:nowrap;min-width:auto}.detail-actions{flex:0 0 auto;margin-top:12px}.invoice-dialog{position:relative;z-index:1001;width:min(760px,calc(100vw - 48px));background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;box-shadow:0 18px 50px rgba(16,24,40,.18)}.invoice-context{display:grid;grid-template-columns:1.2fr 1.1fr .8fr;gap:10px;margin:4px 0 14px}.invoice-context div,.invoice-check-grid div{border:1px solid #dfe6f2;border-radius:6px;background:#f8fbff;padding:10px 12px;min-width:0}.invoice-context span,.invoice-check-grid span{display:block;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:5px}.invoice-context strong,.invoice-check-grid strong{display:block;font-size:16px;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.invoice-form{display:grid;gap:14px}.invoice-upload-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #dfe6f2;border-radius:6px;padding:10px;background:#fff}.compact-file{min-width:0;display:flex;gap:10px;align-items:center;cursor:pointer}.compact-file input{display:none}.compact-file strong{min-width:0;color:#344054;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.invoice-section{border:1px solid #dfe6f2;border-radius:6px;padding:12px;background:#fff}.invoice-section h3{margin:0 0 10px;font-size:15px}.invoice-grid,.invoice-check-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.invoice-check-grid{grid-template-columns:1fr 1fr 1fr 1fr}.field{display:grid;gap:6px}.field label{font-size:12px;color:var(--muted);font-weight:800}.invoice-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.invoice-progress{display:none}.invoice-progress.open{display:block}.history-dialog{position:relative;z-index:1001;width:min(980px,calc(100vw - 64px));height:min(620px,calc(100vh - 96px));overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px;display:flex;flex-direction:column}.history-table-wrap{min-height:0;flex:1;overflow:auto;border:1px solid #e4e9f4;border-radius:6px}.compare-cell{min-width:128px}.pair{display:grid;gap:5px;line-height:18px}.pair div{display:grid;grid-template-columns:46px minmax(0,1fr);gap:6px;align-items:start}.pair b{width:auto;color:var(--muted);font-weight:700;white-space:nowrap}.pair span{min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:break-word}.compare-table td:nth-child(1),.compare-table td:nth-child(2),.compare-table td:nth-child(3){white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:20px}.issue-cell{white-space:normal;width:180px;min-width:180px;max-width:180px;line-height:20px;overflow-wrap:anywhere}.actions{display:flex;gap:10px;flex-wrap:wrap}
+    .range-field{grid-column:span 2;display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:6px;min-height:34px}
+    .range-field>span{color:var(--muted);font-size:13px;white-space:nowrap}
+    .range-display{height:34px;width:100%;border:1px solid #aeb8c8;border-radius:6px;background:#fff;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:0 10px;color:#98a2b3;cursor:pointer;text-align:left}
+    .range-display strong{font-weight:500;color:#344054;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.range-display em{font-style:normal;color:#667085}
+    .range-field.open .range-display{border-color:#3478ff;box-shadow:0 0 0 2px rgba(52,120,255,.08)}
+    .date-picker{display:none;position:fixed;z-index:1400;width:min(620px,calc(100vw - 32px));background:#fff;border:1px solid #d8dde6;border-radius:6px;box-shadow:0 18px 50px rgba(16,24,40,.18);padding:10px}
+    .date-picker.open{display:block}.date-picker-months{display:grid;grid-template-columns:1fr 1fr;gap:10px}.date-month{min-width:0}.date-head{height:32px;display:grid;grid-template-columns:28px 1fr 28px;align-items:center}.date-head strong{text-align:center;font-size:15px}.date-head button,.date-actions button{height:30px;border:0;border-radius:5px;background:#fff;color:#344054;cursor:pointer;font-weight:800}.date-head button:hover,.date-actions button:hover{background:#edf3ff;color:#2765d8}.date-week,.date-grid{display:grid;grid-template-columns:repeat(7,1fr)}.date-week span{height:28px;line-height:28px;text-align:center;color:#667085;font-size:12px}.date-day{height:32px;border:0;background:#fff;color:#344054;cursor:pointer;border-radius:0}.date-day.out{color:#b4bdcc}.date-day.in-range{background:#edf3ff}.date-day.start,.date-day.end{background:#3478ff;color:#fff;border-radius:999px}.date-day:hover{outline:1px solid #3478ff}.date-actions{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e4e9f4;margin-top:10px;padding-top:10px}.date-actions .confirm{background:#3478ff;color:#fff;padding:0 18px}.date-actions .clear{border:1px solid #d8dde6;padding:0 14px}
+    .filter-panel{padding:12px 16px}
+    .filters{display:grid;grid-template-columns:76px minmax(140px,1fr) minmax(140px,1fr) minmax(140px,1fr) minmax(240px,1.5fr) 132px 82px 96px 82px;gap:8px;align-items:start}
+    .filters>input,.filters>select,.filters>.btn{min-width:0;width:100%}
+    .filters>.range-field{grid-column:auto}
+    .range-field{display:grid;grid-template-columns:58px minmax(0,1fr);gap:5px;align-items:center;min-height:34px}
+    .range-display{padding:0 8px;gap:4px}
+    .range-display strong{font-size:13px}
+    .status-checks{min-height:34px;height:34px;overflow:hidden;flex-wrap:nowrap;align-items:center;gap:6px;padding:4px 8px}
+    .status-checks label{font-size:13px;line-height:24px}
+    .status-checks input{flex:0 0 auto}
+    .filter-more{grid-column:1/-1;display:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px;padding:12px;margin-top:4px;border-top:1px solid #e4e9f4;background:#f8fbff;border-radius:6px}
+    .filter-panel.expanded .filter-more{display:grid}
+    .filter-more>input,.filter-more>select,.filter-more>.btn{min-width:0;width:100%}
+    .filter-more .range-field{grid-column:auto;grid-template-columns:64px minmax(0,1fr)}
+    .filter-more .amount-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .filter-more .filter-group{display:grid;gap:6px;min-width:0}
+    .filter-more .filter-label{color:var(--muted);font-size:12px;font-weight:800;line-height:14px}
+    .filter-more .status-checks{height:auto;min-height:34px;flex-wrap:wrap;background:#fff}
+    #paymentStatus{min-width:0}
+    #toggleMore{background:#fff;color:#2765d8;border:1px solid #b8c7e6}
+    @media (max-width:1500px){.filters{grid-template-columns:76px repeat(3,minmax(120px,1fr)) minmax(230px,1.5fr) 120px 76px 90px 76px}.filter-more{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    .summary-strip{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px;margin-bottom:10px}
+    .summary-item{border:1px solid #e4e9f4;background:#fff;border-radius:6px;padding:8px 10px;min-width:0;cursor:pointer}
+    .summary-item:hover{border-color:#3478ff;background:#f8fbff}
+    .summary-item span{display:block;color:#667085;font-size:12px;line-height:16px}.summary-item strong{display:block;font-size:16px;line-height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .money-cell{font-weight:800}.money-paid{color:#0f7a4f}.money-partial{color:#2765d8}.money-none{color:#b42318}.money-over,.overText{color:#7a2ec8;font-weight:800}
+    .table-wrap tbody tr.row-paid td{background:#f0fdf4}.table-wrap tbody tr.row-unpaid td{background:#fff1f0}.table-wrap tbody tr.row-partial td{background:#eff6ff}.table-wrap tbody tr.row-overpaid td{background:#f6f0ff}
+    .table-wrap tbody tr.row-paid td:first-child{box-shadow:inset 4px 0 0 #0f7a4f}.table-wrap tbody tr.row-unpaid td:first-child{box-shadow:inset 4px 0 0 #b42318}.table-wrap tbody tr.row-partial td:first-child{box-shadow:inset 4px 0 0 #2765d8}.table-wrap tbody tr.row-overpaid td:first-child{box-shadow:inset 4px 0 0 #7a2ec8}
+    .table-wrap tbody tr:hover td{filter:brightness(.985)}
+    /* 所有业务表格的操作列固定在最右侧，横向滚动时始终可操作。 */
+    .table-wrap th:last-child,.table-wrap td:last-child,
+    .history-table-wrap th:last-child,.history-table-wrap td:last-child,
+    .recognition-table th:last-child,.recognition-table td:last-child{
+      position:sticky;right:0;z-index:12;background:#fff;
+      box-shadow:-2px 0 5px rgba(16,24,40,.10)
+    }
+    .table-wrap th:last-child,.history-table-wrap th:last-child,
+    .recognition-table th:last-child{z-index:24;background:#f2f4f7}
+    .table-wrap th:last-child,.table-wrap td:last-child{min-width:250px}
+    .history-table-wrap th:last-child,.history-table-wrap td:last-child{min-width:120px}
+    .recognition-table th:last-child,.recognition-table td:last-child{min-width:90px}
+    .table-wrap tr.row-paid td:last-child{background:#f0fdf4}
+    .table-wrap tr.row-unpaid td:last-child{background:#fff1f0}
+    .table-wrap tr.row-partial td:last-child{background:#eff6ff}
+    .table-wrap tr.row-overpaid td:last-child{background:#f6f0ff}
+    /* 对账结果：外层主表格，单元格内部使用带完整分割线的副表格。 */
+    .compare-table{min-width:1330px}
+    .compare-table td:has(>.pair){padding:0}
+    .compare-table .pair{display:grid;width:100%;gap:0;line-height:20px}
+    .compare-table .pair>div{
+      display:grid;grid-template-columns:58px minmax(72px,1fr);
+      min-height:38px;align-items:stretch
+    }
+    .compare-table .pair>div+div{border-top:1px solid #94a3b8}
+    .compare-table .pair>div:nth-child(even){background:#f8fafc}
+    .compare-table .pair b,.compare-table .pair span{
+      display:flex;align-items:center;padding:8px 9px;
+      white-space:nowrap!important;word-break:keep-all!important;
+      overflow-wrap:normal!important
+    }
+    .compare-table .pair b{border-right:1px solid #cbd5e1}
+    .compare-table th:nth-child(1),.compare-table td:nth-child(1),
+    .compare-table th:nth-child(2),.compare-table td:nth-child(2),
+    .compare-table th:nth-child(3),.compare-table td:nth-child(3){
+      white-space:nowrap;word-break:normal;overflow-wrap:normal
+    }
+    .compare-table th:nth-child(1),.compare-table td:nth-child(1){width:130px}
+    .compare-table th:nth-child(2),.compare-table td:nth-child(2){width:150px}
+    .compare-table th:nth-child(3),.compare-table td:nth-child(3){width:190px}
+    .compare-table th:nth-child(4),.compare-table td:nth-child(4){width:155px}
+    .compare-table th:nth-child(5),.compare-table td:nth-child(5){width:155px}
+    .compare-table th:nth-child(6),.compare-table td:nth-child(6){width:155px}
+    .compare-table th:nth-child(7),.compare-table td:nth-child(7){width:145px}
+    .compare-table th:nth-child(8),.compare-table td:nth-child(8){width:220px}
+    .file-mode{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:340px}
+    .file-mode button{height:36px;border:1px solid #b8c7e6;border-radius:6px;background:#fff;color:#2765d8;font-weight:800;cursor:pointer}
+    .file-mode button.active{background:#3478ff;border-color:#3478ff;color:#fff}
+    #uploadModal .upload-dialog{width:min(760px,calc(100vw - 48px))}
+    #uploadModal .file-drop{grid-template-columns:190px minmax(0,1fr);grid-template-rows:auto auto auto;place-items:stretch;padding:0;overflow:hidden;text-align:left}
+    #uploadModal .file-mode{grid-column:1;grid-row:1/4;display:grid;grid-template-columns:1fr;gap:0;width:auto;max-width:none;background:#f2f4f7;border-right:1px solid #dfe6f2}
+    #uploadModal .file-mode button{height:auto;min-height:72px;border:0;border-bottom:1px solid #dfe6f2;border-radius:0;background:transparent;color:#344054;text-align:left;padding:0 18px}
+    #uploadModal .file-mode button.active{background:#edf3ff;color:#2765d8;box-shadow:inset 4px 0 0 #3478ff}
+    #uploadModal .file-drop .btn.ghost{grid-column:2;margin:18px 18px 0;justify-content:center}
+    #uploadModal .file-drop strong{grid-column:2;margin:12px 18px 0;min-height:22px}
+    #uploadModal .file-drop small{grid-column:2;margin:2px 18px 18px;line-height:18px}
+    @media (max-width:720px){#uploadModal .file-drop{grid-template-columns:1fr}#uploadModal .file-mode{grid-column:1;grid-row:auto;grid-template-columns:1fr 1fr;border-right:0;border-bottom:1px solid #dfe6f2}#uploadModal .file-mode button{min-height:48px;text-align:center;padding:0 10px}#uploadModal .file-mode button.active{box-shadow:inset 0 -3px 0 #3478ff}#uploadModal .file-drop .btn.ghost,#uploadModal .file-drop strong,#uploadModal .file-drop small{grid-column:1}}
+    #paymentModal{z-index:1200;padding-top:24px}
+    .usage-inline{min-width:120px;width:100%;border:1px solid transparent;border-radius:6px;background:transparent;padding:6px 8px}
+    .usage-inline:hover,.usage-inline:focus{border-color:#b9c7dc;background:#fff;outline:none}
+    .usage-inline.saved{border-color:#25a55f;background:#effbf4}
+    .usage-inline.save-error{border-color:#d92d20;background:#fff2f0}
+    #uploadModal .file-drop.dragging{border-color:#3478ff;background:#edf4ff;box-shadow:0 0 0 3px rgba(52,120,255,.12)}
+    #uploadModal .file-drop small:after{content:"；也可将文件拖到此处"}
+      .compare-table .pair em.bad{font-style:normal;white-space:nowrap}
+    #modal .dialog{width:calc(100vw - 28px);max-width:none}
+    .compare-card-table{table-layout:fixed!important;min-width:1260px!important;border-collapse:separate;border-spacing:0 5px;background:#f8fafc;font-size:13px}
+    .compare-card-table th{height:38px;background:#f2f4f7}
+    .compare-card-table th:nth-child(1),.compare-card-table td:nth-child(1){width:46px!important;text-align:center}
+    .compare-card-table th:nth-child(2),.compare-card-table td:nth-child(2){width:205px!important}
+    .compare-card-table th:nth-child(3),.compare-card-table td:nth-child(3){width:270px!important}
+    .compare-card-table th:nth-child(4),.compare-card-table td:nth-child(4){width:285px!important}
+    .compare-card-table th:nth-child(5),.compare-card-table td:nth-child(5){width:165px!important}
+    .compare-card-table th:nth-child(6),.compare-card-table td:nth-child(6){width:215px!important}
+    .compare-card-table th:nth-child(7),.compare-card-table td:nth-child(7){width:110px!important}
+    .compare-card-table td{height:112px;padding:12px 14px!important;background:#fff!important;vertical-align:middle;border-top:1px solid #e4e7ec;border-bottom:1px solid #e4e7ec;white-space:normal!important}
+    .compare-card-table td:first-child{border-left:1px solid #e4e7ec;border-radius:8px 0 0 8px}
+    .compare-card-table td:last-child{position:sticky;right:0;z-index:12;border-right:1px solid #e4e7ec;border-radius:0 8px 8px 0;text-align:center;box-shadow:-4px 0 8px rgba(16,24,40,.05)}
+    .compare-card-table th:last-child,.compare-card-table td:last-child{width:110px!important;min-width:110px!important;max-width:none!important}
+    .compare-seq{color:#2765d8;font-weight:850;font-size:14px}
+    .material-block{display:grid;gap:7px}.material-block>strong{font-size:15px;color:#101828;white-space:nowrap}.material-block>span{font-size:12px;color:#667085;white-space:nowrap}
+    .statement-metric-grid,.erp-metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+    .statement-metric-grid>div,.erp-metric-grid>div{display:grid;gap:4px;min-width:0;padding:0 12px 10px}
+    .statement-metric-grid>div:nth-child(odd),.erp-metric-grid>div:nth-child(odd){border-right:1px solid #d8e0ec;padding-left:0}
+    .statement-metric-grid>div:nth-child(even),.erp-metric-grid>div:nth-child(even){padding-right:0}
+    .statement-metric-grid>div:nth-child(-n+2),.erp-metric-grid>div:nth-child(-n+2){border-bottom:1px solid #d8e0ec}
+    .statement-metric-grid>div:nth-child(n+3),.erp-metric-grid>div:nth-child(n+3){padding-top:10px;padding-bottom:0}
+    .statement-metric-grid span,.erp-metric-grid span{font-size:12px;color:#667085;white-space:nowrap}
+    .statement-metric-grid strong,.erp-metric-grid strong{font-size:15px;color:#101828;white-space:nowrap}
+    .erp-empty{height:86px;border:1px solid #fda29b;border-radius:7px;background:#fff5f4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+    .erp-empty:before{content:"⌕";display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#fee4e2;color:#f04438;font-size:19px;font-weight:800}
+    .erp-empty strong{color:#d92d20;font-size:15px}.erp-empty span{color:#667085;font-size:13px}
+    .erp-manual{height:86px;border:1px solid #abefc6;border-radius:7px;background:#ecfdf3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center}
+    .erp-manual:before{content:"✓";display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#d1fadf;color:#067647;font-size:23px;font-weight:900}
+    .erp-manual strong{color:#067647;font-size:15px}.erp-manual span{color:#475467;font-size:13px}
+    .cumulative-block{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+    .cumulative-value{color:#2765d8;font-size:21px;line-height:26px;font-weight:850;white-space:nowrap}
+    .cumulative-block button{border:1px solid #3478ff;background:#fff;color:#2765d8;border-radius:6px;padding:6px 11px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+    .cumulative-block button:hover{background:#edf3ff}
+    .result-block{display:grid;gap:9px}.result-block>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.result-block>div>span{color:#667085;font-weight:700}
+    .result-chip{font-style:normal;border-radius:5px;padding:4px 9px;font-size:13px;font-weight:800;white-space:nowrap}.result-chip.pass{color:#067647;background:#ecfdf3;border:1px solid #abefc6}.result-chip.fail{color:#b42318;background:#fef3f2;border:1px solid #fecdca}
+    .result-block p{border-top:1px solid #e4e7ec;margin:1px 0 0;padding-top:8px;font-size:12px;line-height:18px;white-space:normal}
+    .compare-action{justify-content:center;white-space:nowrap}
+    .compare-sort{margin-left:auto;display:flex;align-items:center;gap:6px;color:#667085;font-size:12px}
+    .compare-sort button{height:30px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;color:#475467;padding:0 10px;font-weight:700;cursor:pointer}
+    .compare-sort button.active{border-color:#3478ff;background:#edf3ff;color:#2765d8}
+    .manual-approved-chip{display:inline-flex;align-items:center;justify-content:center;border:1px solid #abefc6;background:#ecfdf3;color:#067647;border-radius:6px;padding:7px 9px;font-size:12px;font-weight:800;white-space:nowrap}
+</style>
 </head>
-<body><div class="shell"><aside class="side"><div class="brand">LWFP</div><div class="sub">协议发票对账系统</div><div class="menu-title">主菜单</div><nav class="nav"><a href="/">首页</a><a class="active" href="/management">对账管理</a><a href="/management?status=ERP_FAILED">异常处理</a><a href="/delivery">快递对账</a><a href="javascript:void(0)">系统设置</a><a href="javascript:void(0)">操作日志</a></nav><a class="logout" href="/logout">退出</a></aside>
-<main class="main"><section class="top"><h1>对账管理</h1><div><button id="toggleUpload" class="btn">新建对账单</button> <a class="btn secondary" href="/api/statements/template">下载模板</a> <button id="exportSupplier" class="btn secondary">供应商汇总</button></div></section>
+<body><div class="shell"><aside class="side"><div class="brand">LWFP</div><div class="sub">协议发票对账系统</div><div class="menu-title">主菜单</div><nav class="nav"><a href="/">首页</a><a class="active" href="/management">对账管理</a><a href="/management?status=ERP_FAILED">异常处理</a><a href="/delivery">快递对账</a><a href="/supplier-summary" id="supplierSummaryNav">供应商统计</a><a href="javascript:void(0)">系统设置</a><a href="javascript:void(0)">操作日志</a></nav><a class="logout" href="/logout">退出</a></aside>
+<main class="main"><section class="top"><h1>对账管理</h1><div><button id="toggleUpload" class="btn">新建对账单</button> <a class="btn secondary" href="/api/statements/template">下载模板</a> <a id="supplierSummary" class="btn secondary" href="/supplier-summary">供应商统计</a> <button id="exportSupplier" class="btn secondary">供应商汇总</button> <button id="batchConfirm" class="btn secondary" style="display:none">批量确认</button></div></section>
 
-<section class="panel filter-panel"><div class="filters"><select id="searchMode"><option value="fuzzy">模糊</option><option value="exact">精确</option></select><input id="createdAt" placeholder="创建日期"><input id="supplier" placeholder="供应商"><input id="statementNo" placeholder="对账单编码"><input id="usageRemark" placeholder="用途备注"><input id="paymentKeyword" placeholder="付款"><input id="reconciliationLog" placeholder="对账日志"><input id="invoiceLog" placeholder="开票日志"><input id="paymentDate" placeholder="付款日期"><select id="status"><option value="">全部状态</option><option value="WAITING_INVOICE">待上传发票</option><option value="ERP_FAILED">ERP异常</option><option value="INVOICE_FAILED">发票异常</option><option value="COMPLETED">已完成</option></select><button id="search" class="btn">查询</button><button id="reset" class="btn secondary">重置</button></div></section>
-<section class="panel record-panel"><div class="record-head"><h2>对账记录</h2><span id="total" class="muted">共 0 条</span></div><div class="table-wrap"><table><thead><tr><th>创建日期</th><th>供应商</th><th>对账单编码</th><th>用途备注</th><th>付款</th><th>对账日志</th><th>开票日志</th><th>付款日期</th><th>ERP</th><th>发票</th><th>总状态</th><th>操作</th></tr></thead><tbody id="rows"></tbody></table></div><div class="pager"><span class="muted">每页</span><select id="pageSize"><option>10</option><option selected>20</option><option>50</option><option>100</option></select><button id="first" class="btn secondary">首页</button><button id="prev" class="btn secondary">上一页</button><span id="pageInfo" class="muted"></span><button id="next" class="btn secondary">下一页</button><button id="last" class="btn secondary">末页</button><span class="muted">跳至</span><input id="jumpPage" type="number" min="1"><button id="jump" class="btn secondary">跳转</button></div></section></main></div>
-<div id="historyModal" class="modal"><div class="history-dialog"><div class="dialog-head"><h2 id="historyTitle">历史记录</h2><button id="closeHistory" class="btn secondary" type="button">关闭</button></div><div class="history-table-wrap"><table><thead><tr><th>比对时间</th><th>对账金额</th><th>ERP金额</th><th>ERP状态</th><th>发票状态</th><th>总状态</th><th>操作</th></tr></thead><tbody id="historyRows"></tbody></table></div></div></div><div id="uploadModal" class="modal"><div class="upload-dialog"><div class="dialog-head"><h2 id="uploadTitle">新建对账单</h2><button id="closeUpload" class="btn secondary" type="button">关闭</button></div><form id="uploadForm" class="upload-form"><input id="recompareFrom" name="recompare_from" type="hidden"><label class="file-drop"><input id="statementFile" name="statement_pdf" type="file" accept="application/pdf,.xlsx" required><span class="btn ghost">选择对账单</span><strong id="fileName">未选择文件</strong><small>支持 PDF / Excel，对账单上传后自动识别并核对 ERP</small></label><div class="upload-meta"><div class="field"><label>文件标识</label><input id="fileIdentifier" name="file_identifier" placeholder="如：骊威2026年06月对账"></div><div class="field"><label>对账开始时间</label><input id="erpStartDate" name="erp_start_date" type="date" title="对账开始时间"></div><div class="field"><label>对账结束时间</label><input id="erpEndDate" name="erp_end_date" type="date" title="对账结束时间"></div><div class="field"><label>用途备注</label><input id="uploadUsageRemark" name="usage_remark" placeholder="如：货款/模具款/补差"></div></div><div id="uploadProgress" class="upload-progress"><div class="progress-head"><span id="progressTitle">等待开始</span><span id="progressPercent">0%</span></div><div class="progress-track"><div id="progressBar" class="progress-bar"></div></div><div id="progressDetail" class="progress-detail">-</div></div><div class="upload-actions"><span id="uploadMsg" class="muted"></span><button id="uploadSubmit" class="btn" type="submit">开始核对</button></div></form></div></div><div id="invoiceModal" class="modal"><div class="invoice-dialog"><div class="dialog-head"><h2>发票核对</h2><button id="closeInvoice" class="btn secondary" type="button">关闭</button></div><div class="invoice-context"><div><span>对账单</span><strong id="invoiceStatementNo">-</strong></div><div><span>供应商</span><strong id="invoiceSupplier">-</strong></div><div><span>对账金额</span><strong id="invoiceStatementAmount">0.00</strong></div></div><form id="invoiceForm" class="invoice-form"><div class="invoice-upload-line"><label class="compact-file"><input id="invoiceFile" name="invoice_pdf" type="file" accept="application/pdf" required><span class="btn ghost">选择发票 PDF</span><strong id="invoiceFileName">未选择文件</strong></label><button id="invoicePreview" class="btn secondary" type="button">识别发票</button></div><div id="invoiceProgress" class="invoice-progress"><div class="progress-head"><span id="invoiceProgressTitle">等待开始</span><span id="invoiceProgressPercent">0%</span></div><div class="progress-track"><div id="invoiceProgressBar" class="progress-bar"></div></div><div id="invoiceProgressDetail" class="progress-detail">-</div></div><div class="invoice-section"><h3>发票信息核对</h3><div class="invoice-grid"><div class="field"><label>发票号码</label><input id="invoiceNumberEdit" type="text"></div><div class="field"><label>开票日期</label><input id="invoiceDateEdit" type="text"></div><div class="field"><label>发票金额</label><input id="invoiceTotalEdit" type="number" step="0.01"></div></div></div><div class="invoice-section"><h3>总金额核对</h3><div class="invoice-check-grid"><div><span>对账金额</span><strong id="invoiceStatementTotal">0.00</strong></div><div><span>发票金额</span><strong id="invoiceTotalView">0.00</strong></div><div><span>差额</span><strong id="invoiceDiff">0.00</strong></div><div><span>结果</span><strong id="invoiceCheckStatus">待识别</strong></div></div></div><div class="invoice-actions"><span id="invoiceMsg" class="muted"></span><div class="actions"><button id="invoiceConfirm" class="btn" type="button" disabled>确认校验</button></div></div></form></div></div><div id="paymentModal" class="modal"><div class="invoice-dialog"><div class="dialog-head"><h2>填写付款</h2><button id="closePayment" class="btn secondary" type="button">关闭</button></div><div class="invoice-section"><div class="invoice-grid"><div class="field"><label>付款日期</label><input id="paymentRecordDate" type="date"></div><div class="field"><label>付款金额</label><input id="paymentRecordAmount" type="number" step="0.01"></div><div class="field"><label>付款附件</label><input id="paymentRecordFile" type="file" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx"></div></div><div class="field" style="margin-top:10px"><label>付款说明</label><input id="paymentRecordText" placeholder="可填写流水号、用途、截图说明"></div><div class="invoice-actions" style="margin-top:14px"><span id="paymentRecordMsg" class="muted"></span><button class="btn" type="button" onclick="addPaymentRecord()">保存付款</button></div></div></div></div><div id="modal" class="modal"><div class="dialog"><div class="dialog-head"><h2>查看对账详情</h2><button id="closeModal" class="btn secondary">关闭</button></div><div id="detailSummary" class="muted detail-summary"></div><div id="fileLinks" class="actions detail-files"></div><div class="tabs"><button class="tab active" data-tab="compare">对账结果</button><button class="tab" data-tab="recognition">对账单识别结果</button></div><div id="comparePanel" class="tab-panel active"><div class="detail-table-wrap"><table class="compare-table"><thead><tr><th>物料</th><th>采购单</th><th>日期</th><th>数量/到库</th><th>单价</th><th>金额</th><th>状态</th><th>异常原因</th><th>操作</th></tr></thead><tbody id="detailRows"></tbody></table></div></div><div id="recognitionPanel" class="tab-panel"><div class="detail-table-wrap"><table class="recognition-table"><thead><tr><th>客户订单</th><th>物料</th><th>送货单</th><th>发货日期</th><th>品名</th><th>规格</th><th>数量</th><th>单位</th><th>含税单价</th><th>含税金额</th></tr></thead><tbody id="recognitionRows"></tbody></table></div></div><div id="detailActions" class="actions detail-actions"></div></div></div>
+<section class="panel filter-panel"><div class="filters"><select id="searchMode"><option value="fuzzy">模糊</option><option value="exact">精确</option></select><input id="supplier" placeholder="供应商"><input id="statementNo" placeholder="对账单编码"><input id="supplierCode" placeholder="供应商编码"><div class="range-field" data-start="statementStart" data-end="statementEnd"><span>对账时间</span><button class="range-display" type="button"><strong data-role="start">开始日期</strong><em>至</em><strong data-role="end">结束日期</strong></button><input id="statementStart" type="hidden"><input id="statementEnd" type="hidden"></div><select id="status"><option value="">全部总状态</option><option value="WAITING_INVOICE">待上传发票</option><option value="ERP_FAILED">ERP异常</option><option value="INVOICE_FAILED">发票异常</option><option value="COMPLETED">已完成</option></select><button id="search" class="btn">查询</button><button id="toggleMore" class="btn ghost" type="button">更多筛选</button><button id="reset" class="btn secondary">重置</button><div id="moreFilters" class="filter-more"><input id="usageRemark" placeholder="用途备注"><div class="range-field" data-start="createdStart" data-end="createdEnd"><span>创建日期</span><button class="range-display" type="button"><strong data-role="start">开始日期</strong><em>至</em><strong data-role="end">结束日期</strong></button><input id="createdStart" type="hidden"><input id="createdEnd" type="hidden"></div><div class="range-field" data-start="paymentStart" data-end="paymentEnd"><span>付款时间</span><button class="range-display" type="button"><strong data-role="start">开始日期</strong><em>至</em><strong data-role="end">结束日期</strong></button><input id="paymentStart" type="hidden"><input id="paymentEnd" type="hidden"></div><div class="range-field" data-start="invoiceStart" data-end="invoiceEnd"><span>开票时间</span><button class="range-display" type="button"><strong data-role="start">开始日期</strong><em>至</em><strong data-role="end">结束日期</strong></button><input id="invoiceStart" type="hidden"><input id="invoiceEnd" type="hidden"></div><div class="filter-group"><span class="filter-label">对账金额</span><div class="amount-pair"><input id="amountMin" type="number" step="0.01" placeholder="起"><input id="amountMax" type="number" step="0.01" placeholder="止"></div></div><div class="filter-group"><span class="filter-label">付款金额</span><div class="amount-pair"><input id="paymentAmountMin" type="number" step="0.01" placeholder="起"><input id="paymentAmountMax" type="number" step="0.01" placeholder="止"></div></div><div class="filter-group"><span class="filter-label">开票金额</span><div class="amount-pair"><input id="invoiceAmountMin" type="number" step="0.01" placeholder="起"><input id="invoiceAmountMax" type="number" step="0.01" placeholder="止"></div></div><div id="paymentStatus" class="status-checks" title="付款状态"><label><input type="checkbox" value="PAID">已付</label><label><input type="checkbox" value="PARTIAL_PAID">少付</label><label><input type="checkbox" value="OVER_PAID">多付</label><label><input type="checkbox" value="UNPAID">未付</label></div><div id="invoiceAmountStatus" class="status-checks" title="开票状态"><label><input type="checkbox" value="INVOICED">已开票</label><label><input type="checkbox" value="UNINVOICED">未开票</label><label><input type="checkbox" value="UNDER_INVOICED">少开票</label><label><input type="checkbox" value="OVER_INVOICED">多开票</label></div></div></div></section>
+<section class="panel record-panel"><div class="record-head"><h2>对账记录</h2><span id="total" class="muted">共 0 条</span></div><div id="summaryStrip" class="summary-strip"></div><div class="table-wrap"><table><thead><tr><th style="width:40px"><input type="checkbox" id="selectAll" title="全选"></th><th>创建时间</th><th>供应商</th><th>用途</th><th>供应商编码</th><th>对账时间</th><th>对账金额</th><th>付款金额</th><th>付款时间</th><th>开票金额</th><th>开票时间</th><th>ERP</th><th>付款状态</th><th>开票状态</th><th>总状态</th><th>操作</th></tr></thead><tbody id="rows"></tbody></table></div><div class="pager"><span class="muted">每页</span><select id="pageSize"><option>10</option><option selected>20</option><option>50</option><option>100</option></select><button id="first" class="btn secondary">首页</button><button id="prev" class="btn secondary">上一页</button><span id="pageInfo" class="muted"></span><button id="next" class="btn secondary">下一页</button><button id="last" class="btn secondary">末页</button><span class="muted">跳至</span><input id="jumpPage" type="number" min="1"><button id="jump" class="btn secondary">跳转</button></div></section></main></div>
+<div id="datePicker" class="date-picker"></div><div id="historyModal" class="modal"><div class="history-dialog"><div class="dialog-head"><h2 id="historyTitle">历史记录</h2><button id="closeHistory" class="btn secondary" type="button">关闭</button></div><div class="history-table-wrap"><table><thead><tr><th>比对时间</th><th>对账金额</th><th>ERP金额</th><th>ERP状态</th><th>发票状态</th><th>总状态</th><th>操作</th></tr></thead><tbody id="historyRows"></tbody></table></div></div></div><div id="uploadModal" class="modal"><div class="upload-dialog"><div class="dialog-head"><h2 id="uploadTitle">新建对账单</h2><button id="closeUpload" class="btn secondary" type="button">关闭</button></div><form id="uploadForm" class="upload-form"><input id="recompareFrom" name="recompare_from" type="hidden"><div class="file-drop" id="statementDropZone"><div class="file-mode"><button id="modePdf" class="active" type="button" data-file-mode="pdf" onclick="setUploadFileMode('pdf');return false">通用上传</button><button id="modeExcel" type="button" data-file-mode="excel" onclick="setUploadFileMode('excel');return false">模板上传</button></div><input id="statementFile" name="statement_pdf" type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" data-mode="pdf" required><button id="pickStatementFile" class="btn ghost" type="button" onclick="document.getElementById('statementFile').click();return false">选择对账单文件</button><strong id="fileName">未选择文件</strong><small id="fileModeHint">支持 PDF、图片、XLS、XLSX，系统提取关键数据后核对 ERP</small></div><div class="upload-meta"><div class="field"><label>唯一标识（自动生成）</label><input id="fileIdentifier" type="text" readonly placeholder="合作商编码_账期"></div><div class="field"><label>对账开始时间</label><input id="erpStartDate" name="erp_start_date" type="date" title="对账开始时间"></div><div class="field"><label>对账结束时间</label><input id="erpEndDate" name="erp_end_date" type="date" title="对账结束时间"></div><div class="field"><label>用途备注</label><input id="uploadUsageRemark" name="usage_remark" placeholder="如：货款/模具款/补差"></div><div class="field" id="supplierMatchField" style="display:none"><label id="supplierMatchLabel">合作商（必选）</label><select id="selectedSupplierCode" name="selected_supplier_code"><option value="">请选择已有合作商</option></select><input id="selectedSupplierName" name="selected_supplier_name" type="hidden"><input id="statementImportToken" name="import_token" type="hidden"></div></div><div id="uploadProgress" class="upload-progress"><div class="progress-head"><span id="progressTitle">等待开始</span><span id="progressPercent">0%</span></div><div class="progress-track"><div id="progressBar" class="progress-bar"></div></div><div id="progressDetail" class="progress-detail">-</div></div><div class="upload-actions"><span id="uploadMsg" class="muted"></span><button id="uploadSubmit" class="btn" type="submit">开始核对</button></div></form></div></div><div id="allocationHistoryModal" class="modal" style="z-index:1400"><div class="history-dialog"><div class="dialog-head"><h2 id="allocationHistoryTitle">累计占用历史</h2><button id="closeAllocationHistory" class="btn secondary" type="button">关闭</button></div><div id="allocationHistorySummary" class="muted" style="margin:4px 0 12px"></div><div class="history-table-wrap"><table><thead><tr><th>账期</th><th>对账单</th><th>对账日期</th><th>本次数量</th><th>本次金额</th><th>累计数量</th><th>累计金额</th><th>创建时间</th></tr></thead><tbody id="allocationHistoryRows"></tbody></table></div></div></div><div id="statementOverwriteModal" class="modal" style="z-index:1350"><div class="invoice-dialog" style="width:min(560px,calc(100vw - 48px))"><div class="dialog-head"><h2>确认覆盖对账单</h2><button id="cancelStatementOverwriteTop" class="btn secondary" type="button">返回</button></div><div class="invoice-section"><div class="field"><label>已存在的对账单</label><strong id="overwriteStatementIdentity">-</strong></div><p style="margin:14px 0 0;line-height:1.8;color:#475467">该合作商在此账期已有对账单。覆盖后，将使用本次上传内容更新原对账单及明细，不会新增重复记录。</p><p style="margin:8px 0 0;line-height:1.8;color:#b42318;font-weight:700">如不需要覆盖，请选择“保留原对账单”。</p></div><div class="invoice-actions" style="margin-top:16px"><button id="cancelStatementOverwrite" class="btn secondary" type="button">保留原对账单</button><button id="confirmStatementOverwrite" class="btn" type="button">确认覆盖</button></div></div></div><div id="supplierConfirmModal" class="modal" style="z-index:1250"><div class="invoice-dialog"><div class="dialog-head"><h2>确认合作商</h2><button id="cancelSupplierConfirm" class="btn secondary" type="button">返回</button></div><div class="invoice-section"><div class="field"><label>文件识别到的供货商</label><strong id="detectedSupplierView">-</strong></div><div class="field" style="margin-top:12px"><label>请选择ERP合作商（必须带编码）</label><div style="display:flex;gap:8px;margin-bottom:8px"><input id="supplierSearchKeyword" placeholder="输入公司简称模糊查询" style="flex:1"><button id="searchSupplierConfirm" class="btn secondary" type="button">查询</button></div><select id="supplierConfirmSelect" style="width:100%"></select></div><div class="field" style="margin-top:12px"><label>原文件</label><a id="pendingFilePreview" class="btn secondary" target="_blank">查看原文件，核对图片上的公司名称</a></div></div><div class="invoice-actions" style="margin-top:14px"><span id="supplierConfirmMsg" class="muted"></span><button id="confirmSupplierAndRecognize" class="btn" type="button">确认并开始识别</button></div></div></div><div id="invoiceModal" class="modal"><div class="invoice-dialog"><div class="dialog-head"><h2>发票核对</h2><button id="closeInvoice" class="btn secondary" type="button">关闭</button></div><div class="invoice-context"><div><span>对账单</span><strong id="invoiceStatementNo">-</strong></div><div><span>供应商</span><strong id="invoiceSupplier">-</strong></div><div><span>对账金额</span><strong id="invoiceStatementAmount">0.00</strong></div></div><form id="invoiceForm" class="invoice-form"><div class="invoice-upload-line"><label class="compact-file"><input id="invoiceFile" name="invoice_pdf" type="file" accept="application/pdf,.pdf" required><span class="btn ghost">选择发票 PDF</span><strong id="invoiceFileName">未选择文件</strong></label><button id="invoicePreview" class="btn secondary" type="button">识别发票</button></div><div id="invoiceProgress" class="invoice-progress"><div class="progress-head"><span id="invoiceProgressTitle">等待开始</span><span id="invoiceProgressPercent">0%</span></div><div class="progress-track"><div id="invoiceProgressBar" class="progress-bar"></div></div><div id="invoiceProgressDetail" class="progress-detail">-</div></div><div class="invoice-section"><h3>发票信息核对</h3><div class="invoice-grid"><div class="field"><label>发票号码</label><input id="invoiceNumberEdit" type="text"></div><div class="field"><label>开票日期</label><input id="invoiceDateEdit" type="text"></div><div class="field"><label>发票金额</label><input id="invoiceTotalEdit" type="number" step="0.01"></div></div></div><div class="invoice-section"><h3>总金额核对</h3><div class="invoice-check-grid"><div><span>对账金额</span><strong id="invoiceStatementTotal">0.00</strong></div><div><span>发票金额</span><strong id="invoiceTotalView">0.00</strong></div><div><span>差额</span><strong id="invoiceDiff">0.00</strong></div><div><span>结果</span><strong id="invoiceCheckStatus">待识别</strong></div></div></div><div class="invoice-actions"><span id="invoiceMsg" class="muted"></span><div class="actions"><button id="invoiceConfirm" class="btn" type="button" disabled>确认校验</button></div></div></form></div></div><div id="paymentModal" class="modal"><div class="invoice-dialog"><div class="dialog-head"><h2>填写付款</h2><button id="closePayment" class="btn secondary" type="button">关闭</button></div><div class="invoice-section"><div class="invoice-grid"><div class="field"><label>付款日期</label><input id="paymentRecordDate" type="date"></div><div class="field"><label>付款金额</label><input id="paymentRecordAmount" type="number" step="0.01"></div><div class="field"><label>付款附件</label><input id="paymentRecordFile" type="file" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx"></div></div><div class="field" style="margin-top:10px"><label>付款说明</label><input id="paymentRecordText" placeholder="可填写流水号、用途、截图说明"></div><div class="invoice-actions" style="margin-top:14px"><span id="paymentRecordMsg" class="muted"></span><button class="btn" type="button" onclick="addPaymentRecord()">保存付款</button></div></div></div></div><div id="modal" class="modal"><div class="dialog"><div class="dialog-head"><h2>查看对账详情</h2><button id="closeModal" class="btn secondary">关闭</button></div><div id="detailSummary" class="muted detail-summary"></div><div id="fileLinks" class="actions detail-files"></div><div class="tabs"><button class="tab active" data-tab="compare">对账结果</button><button class="tab" data-tab="recognition">对账单识别结果</button><div class="compare-sort"><span>排序：</span><button id="sortCompareAbnormal" class="active" type="button">异常优先</button><button id="sortCompareOriginal" type="button">对账单顺序</button></div></div><div id="comparePanel" class="tab-panel active"><div class="detail-table-wrap"><table class="compare-table compare-card-table"><thead><tr><th>物料信息</th><th>对账单数据</th><th>ERP匹配</th><th>累计占用</th><th>校验结果</th><th>操作</th></tr></thead><tbody id="detailRows"></tbody></table></div></div><div id="recognitionPanel" class="tab-panel"><div class="detail-table-wrap"><table class="recognition-table"><thead><tr><th>客户订单</th><th>物料</th><th>送货单</th><th>发货日期</th><th>品名</th><th>规格</th><th>数量</th><th>单位</th><th>含税单价</th><th>含税金额</th><th>校验</th><th>操作</th></tr></thead><tbody id="recognitionRows"></tbody></table></div></div><div id="detailActions" class="actions detail-actions"></div></div></div>
 <script>
-let page=1,pageSize=20,lastTotal=0,currentDetailId=null;const statusText={PASS:'通过',FAIL:'异常',WAITING_INVOICE:'待上传发票',ERP_FAILED:'ERP异常',INVOICE_FAILED:'发票异常',COMPLETED:'已完成',NOT_UPLOADED:'未上传'};function st(v){return statusText[v]||v||'-'}function cls(v){return v==='PASS'||v==='COMPLETED'?'ok':v==='WAITING_INVOICE'||v==='NOT_UPLOADED'?'blueText':v==='ERP_FAILED'||v==='INVOICE_FAILED'||v==='FAIL'?'bad':''}function fmtMoney(v,d=2){if(v===null||v===undefined||v==='')return '';const n=Number(v);return Number.isFinite(n)?n.toFixed(d):v}function fmtPrice(v){if(v===null||v===undefined||v==='')return '';const n=Number(v);if(!Number.isFinite(n))return v;return n.toFixed(6).replace(/0+$/,'').replace(/\.$/,'')}function totalPages(){return Math.max(1,Math.ceil(lastTotal/pageSize))}function canRecompare(row){return row.overall_status==='ERP_FAILED'||row.overall_status==='FAIL'}function q(){const p=new URLSearchParams();p.set('page',page);p.set('page_size',pageSize);p.set('search_mode',document.getElementById('searchMode').value||'fuzzy');for(const [id,key] of [['createdAt','created_at'],['supplier','supplier'],['statementNo','statement_no'],['usageRemark','usage_remark'],['paymentKeyword','payment_keyword'],['reconciliationLog','reconciliation_log'],['invoiceLog','invoice_log'],['paymentDate','payment_date'],['status','status']]){const v=document.getElementById(id).value;if(v)p.set(key,v)}return p}
+let page=1,pageSize=20,lastTotal=0,currentDetailId=null;const statusText={PASS:'通过',FAIL:'异常',WAITING_INVOICE:'待上传发票',ERP_PENDING:'待获取ERP',PENDING:'待校验',ERP_FAILED:'ERP异常',INVOICE_FAILED:'发票异常',COMPLETED:'已完成',NOT_UPLOADED:'未上传',PAID:'已付',PARTIAL_PAID:'少付',UNPAID:'未付',OVER_PAID:'多付',INVOICED:'已开票',UNINVOICED:'未开票',UNDER_INVOICED:'少开票',OVER_INVOICED:'多开票'};function st(v){return statusText[v]||v||'-'}function cls(v){return v==='PASS'||v==='COMPLETED'||v==='PAID'||v==='INVOICED'?'ok':v==='WAITING_INVOICE'||v==='ERP_PENDING'||v==='PENDING'||v==='NOT_UPLOADED'||v==='PARTIAL_PAID'||v==='UNDER_INVOICED'?'blueText':v==='OVER_PAID'?'overText':v==='OVER_INVOICED'?'warn':v==='ERP_FAILED'||v==='INVOICE_FAILED'||v==='FAIL'||v==='UNPAID'||v==='UNINVOICED'?'bad':''}function fmtMoney(v,d=2){if(v===null||v===undefined||v==='')return '';const n=Number(v);return Number.isFinite(n)?n.toFixed(d):v}function fmtPrice(v){if(v===null||v===undefined||v==='')return '';const n=Number(v);if(!Number.isFinite(n))return v;return n.toFixed(6).replace(/0+$/,'').replace(/\.$/,'')}function totalPages(){return Math.max(1,Math.ceil(lastTotal/pageSize))}function canRecompare(row){return true}function q(){const p=new URLSearchParams();p.set('page',page);p.set('page_size',pageSize);p.set('search_mode',document.getElementById('searchMode').value||'fuzzy');for(const [id,key] of [['supplier','supplier'],['statementNo','statement_no'],['supplierCode','supplier_code'],['usageRemark','usage_remark'],['createdStart','start_date'],['createdEnd','end_date'],['statementStart','statement_start'],['statementEnd','statement_end'],['amountMin','amount_min'],['amountMax','amount_max'],['paymentStart','payment_start'],['paymentEnd','payment_end'],['paymentAmountMin','payment_amount_min'],['paymentAmountMax','payment_amount_max'],['invoiceStart','invoice_start'],['invoiceEnd','invoice_end'],['invoiceAmountMin','invoice_amount_min'],['invoiceAmountMax','invoice_amount_max'],['status','status']]){const v=document.getElementById(id).value;if(v)p.set(key,v)}for(const opt of document.querySelectorAll('#paymentStatus input:checked'))p.append('payment_status',opt.value);for(const opt of document.querySelectorAll('#invoiceAmountStatus input:checked'))p.append('invoice_amount_status',opt.value);return p}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function saveUsage(input){const value=input.value.trim();if(value===input.dataset.original)return;input.disabled=true;input.classList.remove('saved','save-error');try{const r=await fetch(`/api/history/${input.dataset.id}/usage`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({usage_remark:value})});const d=await r.json();if(!r.ok)throw new Error(d.error||'保存失败');input.value=d.usage_remark||'';input.dataset.original=input.value;input.classList.add('saved');setTimeout(()=>input.classList.remove('saved'),1000)}catch(e){input.classList.add('save-error');alert(e.message)}finally{input.disabled=false}}
+const picker={el:null,field:null,year:0,month:0,start:'',end:''};function pad(n){return String(n).padStart(2,'0')}function fmtDate(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}function parseDate(s){if(!s)return null;const a=s.split('-').map(Number);return a.length===3?new Date(a[0],a[1]-1,a[2]):null}function shiftMonth(y,m,n){return new Date(y,m+n,1)}function syncRangeField(field){const s=document.getElementById(field.dataset.start).value,e=document.getElementById(field.dataset.end).value;field.querySelector('[data-role=start]').textContent=s||'开始日期';field.querySelector('[data-role=end]').textContent=e||'结束日期'}function syncAllRangeFields(){document.querySelectorAll('.range-field[data-start]').forEach(syncRangeField)}function openDatePicker(field){picker.el=picker.el||document.getElementById('datePicker');picker.field=field;picker.start=document.getElementById(field.dataset.start).value;picker.end=document.getElementById(field.dataset.end).value;const base=parseDate(picker.start)||new Date();picker.year=base.getFullYear();picker.month=base.getMonth();document.querySelectorAll('.range-field.open').forEach(x=>x.classList.remove('open'));field.classList.add('open');renderDatePicker();positionDatePicker()}function closeDatePicker(){if(!picker.el)return;picker.el.classList.remove('open');document.querySelectorAll('.range-field.open').forEach(x=>x.classList.remove('open'))}function positionDatePicker(){const r=picker.field.getBoundingClientRect(),w=Math.min(620,window.innerWidth-32);let left=Math.min(Math.max(16,r.left),window.innerWidth-w-16),top=r.bottom+6;if(top+360>window.innerHeight)top=Math.max(12,r.top-370);picker.el.style.left=left+'px';picker.el.style.top=top+'px'}function monthHtml(year,month,side){const first=new Date(year,month,1),start=new Date(year,month,1-first.getDay()),title=`${year} 年 ${month+1} 月`;let days='';for(let i=0;i<42;i++){const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),v=fmtDate(d),out=d.getMonth()!==month,stt=picker.start===v,end=picker.end===v,inRange=picker.start&&picker.end&&v>picker.start&&v<picker.end;days+=`<button type="button" class="date-day ${out?'out':''} ${inRange?'in-range':''} ${stt?'start':''} ${end?'end':''}" data-date="${v}">${d.getDate()}</button>`}return `<div class="date-month"><div class="date-head"><button type="button" data-nav="${side==='left'?-1:0}">${side==='left'?'‹':''}</button><strong>${title}</strong><button type="button" data-nav="${side==='right'?1:0}">${side==='right'?'›':''}</button></div><div class="date-week">${['日','一','二','三','四','五','六'].map(x=>`<span>${x}</span>`).join('')}</div><div class="date-grid">${days}</div></div>`}function renderDatePicker(){const next=shiftMonth(picker.year,picker.month,1);picker.el.innerHTML=`<div class="date-picker-months">${monthHtml(picker.year,picker.month,'left')}${monthHtml(next.getFullYear(),next.getMonth(),'right')}</div><div class="date-actions"><button class="clear" type="button" data-clear="1">清空</button><button class="confirm" type="button" data-confirm="1">确定</button></div>`;picker.el.classList.add('open')}function pickDate(v){if(!picker.start||picker.end){picker.start=v;picker.end=''}else if(v<picker.start){picker.end=picker.start;picker.start=v}else{picker.end=v}renderDatePicker()}document.addEventListener('click',e=>{const range=e.target.closest('.range-field[data-start]');if(range&&e.target.closest('.range-display')){e.preventDefault();openDatePicker(range);return}if(e.target.closest('#datePicker')){const nav=e.target.dataset.nav;if(nav&&nav!=='0'){const d=shiftMonth(picker.year,picker.month,Number(nav));picker.year=d.getFullYear();picker.month=d.getMonth();renderDatePicker();return}if(e.target.dataset.date){pickDate(e.target.dataset.date);return}if(e.target.dataset.clear){picker.start='';picker.end='';document.getElementById(picker.field.dataset.start).value='';document.getElementById(picker.field.dataset.end).value='';syncRangeField(picker.field);closeDatePicker();return}if(e.target.dataset.confirm){document.getElementById(picker.field.dataset.start).value=picker.start||'';document.getElementById(picker.field.dataset.end).value=picker.end||picker.start||'';syncRangeField(picker.field);closeDatePicker();return}return}if(picker.el&&picker.el.classList.contains('open'))closeDatePicker()});window.addEventListener('resize',()=>{if(picker.el&&picker.el.classList.contains('open'))positionDatePicker()});
 function renderPager(){const pages=totalPages();document.getElementById('total').textContent=`共 ${lastTotal} 条`;document.getElementById('pageInfo').textContent=`第 ${page} / ${pages} 页`;document.getElementById('jumpPage').value=page;for(const id of ['first','prev'])document.getElementById(id).disabled=page<=1;for(const id of ['next','last'])document.getElementById(id).disabled=page>=pages;}
+function setCheckGroup(id,values){const wanted=new Set(values);for(const opt of document.querySelectorAll(`#${id} input`))opt.checked=wanted.has(opt.value)}
+function clearSummaryFilters(){setCheckGroup('paymentStatus',[]);setCheckGroup('invoiceAmountStatus',[]);for(const id of ['paymentAmountMin','paymentAmountMax','invoiceAmountMin','invoiceAmountMax'])document.getElementById(id).value=''}
+function applySummaryFilter(type){clearSummaryFilters();if(type.startsWith('pay:'))setCheckGroup('paymentStatus',[type.slice(4)]);else if(type.startsWith('invoice:'))setCheckGroup('invoiceAmountStatus',type.slice(8).split(','));else if(type==='paymentAmount')document.getElementById('paymentAmountMin').value='0.01';else if(type==='invoiceAmount')document.getElementById('invoiceAmountMin').value='0.01';page=1;load()}
+function moneyCls(status){return status==='PAID'||status==='INVOICED'?'money-paid':status==='PARTIAL_PAID'||status==='UNDER_INVOICED'?'money-partial':status==='OVER_PAID'||status==='OVER_INVOICED'?'money-over':'money-none'}function rowCls(row){if(row.payment_status==='PAID')return'row-paid';if(row.payment_status==='PARTIAL_PAID')return'row-partial';if(row.payment_status==='OVER_PAID')return'row-overpaid';if(row.payment_status==='UNPAID')return'row-unpaid';return''}function renderSummary(s){s=s||{};document.getElementById('summaryStrip').innerHTML=`<div class="summary-item" data-summary-filter="all"><span>对账单数</span><strong>${s.statement_count||0}</strong></div><div class="summary-item" data-summary-filter="all"><span>对账金额</span><strong>${fmtMoney(s.statement_amount)}</strong></div><div class="summary-item" data-summary-filter="paymentAmount"><span>付款金额</span><strong class="money-paid">${fmtMoney(s.payment_amount)}</strong></div><div class="summary-item" data-summary-filter="invoiceAmount"><span>开票金额</span><strong class="money-paid">${fmtMoney(s.invoice_amount)}</strong></div><div class="summary-item" data-summary-filter="pay:UNPAID"><span>未付</span><strong class="bad">${s.unpaid_count||0}</strong></div><div class="summary-item" data-summary-filter="pay:PARTIAL_PAID"><span>少付</span><strong class="blueText">${s.partial_paid_count||0}</strong></div><div class="summary-item" data-summary-filter="pay:OVER_PAID"><span>多付</span><strong class="warn">${s.over_paid_count||0}</strong></div><div class="summary-item" data-summary-filter="pay:PAID"><span>已付</span><strong class="ok">${s.paid_count||0}</strong></div><div class="summary-item" data-summary-filter="invoice:UNINVOICED"><span>未开票</span><strong class="bad">${s.uninvoiced_count||0}</strong></div><div class="summary-item" data-summary-filter="invoice:INVOICED"><span>已开票</span><strong class="ok">${s.invoiced_count||0}</strong></div>`}
 function historyApi(row){return row.statement_no?`/api/history?statement_no=${encodeURIComponent(row.statement_no)}&page_size=200&all=1`:`/api/history?reconciliation_key=${encodeURIComponent(row.reconciliation_key||'')}&page_size=200&all=1`}
-async function load(){const r=await fetch('/api/history?'+q());const d=await r.json();lastTotal=d.total||0;if(page>totalPages()){page=totalPages();return load()}renderPager();document.getElementById('rows').innerHTML=(d.rows||[]).map(row=>{const erp=(row.overall_status==='ERP_FAILED'||row.overall_status==='FAIL')?'FAIL':'PASS';return `<tr><td>${row.created_at||'-'}</td><td>${row.supplier||'-'}</td><td>${row.statement_no||'-'}</td><td>${row.usage_remark||'-'}</td><td>${row.payment_log||'-'}</td><td>${row.reconciliation_log||'-'}</td><td>${row.invoice_log||row.invoice_date||'-'}</td><td>${row.payment_date||'-'}</td><td class="${cls(erp)}">${st(erp)}</td><td class="${cls(row.invoice_status)}">${st(row.invoice_status)}</td><td class="${cls(row.overall_status)}">${st(row.overall_status)}</td><td><a href="#" onclick="view('${row.id}');return false;">查看</a>　${canRecompare(row)?`<a href="#" onclick="recompare('${row.id}');return false;">重新比对</a>　`:''}<a href="#" onclick='showHistory(${JSON.stringify(row)});return false;'>历史</a>　<a href="#" class="bad" onclick="deleteRow('${row.id}');return false;">删除</a></td></tr>`}).join('')||'<tr><td colspan="12" class="muted">暂无对账记录</td></tr>'}
+async function load(){const r=await fetch('/api/history?'+q());const d=await r.json();lastTotal=d.total||0;if(page>totalPages()){page=totalPages();return load()}renderPager();renderSummary(d.summary);document.getElementById('rows').innerHTML=(d.rows||[]).map(row=>{const erp=(row.overall_status==='ERP_FAILED'||row.overall_status==='FAIL')?'FAIL':(row.erp_purchase_total>0?'PASS':'PENDING');const usage=esc(row.usage_remark||'');return `<tr class="${rowCls(row)}"><td><input type="checkbox" class="row-check" data-id="${row.id}" data-status="${row.overall_status}"></td><td>${row.created_at||'-'}</td><td>${row.supplier||'-'}</td><td><input class="usage-inline" data-id="${row.id}" data-original="${usage}" value="${usage}" maxlength="200" placeholder="填写用途" onblur="saveUsage(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></td><td>${row.supplier_code||'-'}</td><td>${row.statement_time||'-'}</td><td>${fmtMoney(row.statement_total)}</td><td class="money-cell ${moneyCls(row.payment_status)}">${fmtMoney(row.payment_amount)}</td><td>${row.payment_date||'-'}</td><td class="money-cell ${moneyCls(row.invoice_amount_status)}">${fmtMoney(row.invoice_amount)}</td><td>${row.invoice_date||'-'}</td><td class="${cls(erp)}">${st(erp)}</td><td class="${cls(row.payment_status)}">${st(row.payment_status)}</td><td class="${cls(row.invoice_amount_status)}">${st(row.invoice_amount_status)}</td><td class="${cls(row.overall_status)}">${st(row.overall_status)}</td><td><a href="#" onclick="view('${row.id}');return false;">查看</a>　<a href="#" onclick="recompare('${row.id}');return false;">重新比对</a>　<a href="#" onclick='showHistory(${JSON.stringify(row)});return false;'>历史</a>　<a href="#" class="bad" onclick="deleteRow('${row.id}');return false;">删除</a></td></tr>`}).join('')||'<tr><td colspan="16" class="muted">暂无对账记录</td></tr>'}
 function switchDetailTab(name){for(const btn of document.querySelectorAll('.tab'))btn.classList.toggle('active',btn.dataset.tab===name);document.getElementById('comparePanel').classList.toggle('active',name==='compare');document.getElementById('recognitionPanel').classList.toggle('active',name==='recognition')}
-function renderRecords(records){}async function postRecord(fd,msg){if(!currentDetailId)return null;msg.textContent='保存中...';const r=await fetch('/api/history/'+currentDetailId+'/records',{method:'POST',body:fd});const d=await r.json();if(!r.ok){msg.textContent=d.error||'保存失败';return null}msg.textContent='已保存';load();return d}function openPayment(id){currentDetailId=id;document.getElementById('paymentRecordDate').value='';document.getElementById('paymentRecordAmount').value='';document.getElementById('paymentRecordText').value='';document.getElementById('paymentRecordFile').value='';document.getElementById('paymentRecordMsg').textContent='';document.getElementById('paymentModal').classList.add('open')}async function addPaymentRecord(){const msg=document.getElementById('paymentRecordMsg');const amount=document.getElementById('paymentRecordAmount').value.trim();const text=document.getElementById('paymentRecordText').value.trim();const date=document.getElementById('paymentRecordDate').value;const file=document.getElementById('paymentRecordFile').files[0];if(!date&&!amount&&!text&&!file){msg.textContent='日期、金额、说明、附件至少填一项';return}const fd=new FormData();fd.set('title','付款记录');fd.set('record_date',date);fd.set('text_content',(amount?`付款金额：${fmtMoney(amount)}；`:'')+text);if(file)fd.set('file',file);const d=await postRecord(fd,msg);if(!d)return;setTimeout(()=>{document.getElementById('paymentModal').classList.remove('open');load();if(currentDetailId)view(currentDetailId)},300)}async function view(id){currentDetailId=id;const r=await fetch('/api/history/'+id);const d=await r.json();document.getElementById('modal').classList.add('open');switchDetailTab('compare');const s=d.summary||{};const arrivalDates=[...new Set((d.line_checks||[]).map(x=>x.erp_arrival_dates).filter(Boolean))].join('；')||'-';document.getElementById('detailSummary').textContent=`对账单编号：${s.statement_no||d.statement_no||'-'}　供应商：${s.supplier||d.supplier||'-'}　对账金额：${s.statement_total||d.statement_total||'-'}　ERP金额：${s.erp_purchase_total||d.erp_purchase_total||'-'}　到库日期：${arrivalDates}`;document.getElementById('fileLinks').innerHTML=(d.files||[]).map(f=>`<a class="btn secondary" href="${f.url}" target="_blank">${f.label}</a>`).join('');document.getElementById('detailRows').innerHTML=(d.line_checks||[]).map((x,i)=>{const bad=x.quantity_status!=='PASS'||x.amount_status!=='PASS';return `<tr><td>${x.material_code||''}</td><td>${x.purchase_order_id||''}</td><td class="compare-cell"><div class="pair"><div><b>对账单</b><span>${x.delivery_date||''}</span></div><div><b>ERP</b><span>${x.erp_order_dates||''}</span></div></div></td><td class="compare-cell"><div class="pair"><div><b>对账单</b><span>${x.statement_quantity||''}</span></div><div><b>采购</b><span>${x.erp_purchase_quantity||''}</span></div><div><b>到库</b><span>${x.arrival_record_quantity||''}</span></div></div></td><td class="compare-cell"><div class="pair"><div><b>对账单</b><span>${fmtPrice(x.statement_unit_price)}</span></div><div><b>ERP</b><span>${fmtPrice(x.erp_unit_price)}</span></div></div></td><td class="compare-cell"><div class="pair"><div><b>对账单</b><span>${fmtMoney(x.statement_amount)}</span></div><div><b>ERP</b><span>${fmtMoney(x.erp_amount)}</span></div></div></td><td><div class="pair"><div><b>到库</b><span class="${cls(x.quantity_status)}">${st(x.quantity_status)}</span></div><div><b>金额</b><span class="${cls(x.amount_status)}">${st(x.amount_status)}</span></div></div></td><td class="issue-cell">${x.issue_text||''}</td><td>${bad?`<button class="btn secondary" onclick="approveLine('${id}',${i})">审核通过</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="9" class="muted">暂无对比结果</td></tr>';document.getElementById('recognitionRows').innerHTML=(d.statement_lines||[]).map(x=>`<tr><td>${x.customer_order_no||''}</td><td>${x.customer_material_no||''}</td><td>${x.delivery_no||''}</td><td>${x.delivery_date||''}</td><td>${x.product_name||''}</td><td>${x.supplier_spec||''}</td><td>${x.quantity||''}</td><td>${x.unit||''}</td><td>${fmtPrice(x.tax_inclusive_unit_price)}</td><td>${fmtMoney(x.tax_inclusive_amount)}</td></tr>`).join('')||'<tr><td colspan="10" class="muted">暂无对账单识别结果</td></tr>';document.getElementById('detailActions').innerHTML=`${s.overall_status==='ERP_FAILED'?`<button class="btn" onclick="approve('${id}')">对账单内容可以核对正常</button>`:''}<button class="btn secondary" onclick="openPayment('${id}')">填写付款</button><button class="btn secondary" onclick="openInvoice('${id}')">上传发票</button>`;}
-let progressTimer=null;function updateUploadProgress(data){const percent=Math.max(0,Math.min(Number(data.percent||0),100));document.getElementById('progressBar').style.width=percent+'%';document.getElementById('progressPercent').textContent=percent+'%';document.getElementById('progressTitle').textContent=data.status==='done'?'处理完成':data.status==='error'?'处理失败':'正在处理';document.getElementById('progressDetail').textContent=(data.message||'处理中')+' · '+(data.step??0)+'/'+(data.total??8)}function startProgress(taskId){document.getElementById('uploadProgress').classList.add('open');updateUploadProgress({percent:0,step:0,total:8,message:'准备上传'});if(progressTimer)clearInterval(progressTimer);progressTimer=setInterval(async()=>{try{const r=await fetch('/api/progress/'+taskId);const d=await r.json();updateUploadProgress(d);if(d.status==='done'||d.status==='error'){clearInterval(progressTimer);progressTimer=null}}catch(e){}},700)}function resetUploadMode(){if(progressTimer){clearInterval(progressTimer);progressTimer=null}document.getElementById('uploadProgress').classList.remove('open');updateUploadProgress({percent:0,step:0,total:8,message:'-'});document.getElementById('recompareFrom').value='';document.getElementById('uploadTitle').textContent='新建对账单';document.getElementById('uploadSubmit').textContent='开始核对';document.getElementById('uploadSubmit').disabled=false;document.getElementById('uploadMsg').textContent='';document.getElementById('statementFile').value='';document.getElementById('fileName').textContent='未选择文件';document.getElementById('fileIdentifier').value='';document.getElementById('erpStartDate').value='';document.getElementById('erpEndDate').value='';document.getElementById('uploadUsageRemark').value=''}
-async function recompare(id){const r=await fetch('/api/history/'+id);const d=await r.json();if(!canRecompare(d.summary||d)){alert('该数据已经核对过，不能再次核对');return}resetUploadMode();document.getElementById('recompareFrom').value=id;document.getElementById('uploadTitle').textContent='重新比对';document.getElementById('uploadSubmit').textContent='上传并重新比对';document.getElementById('uploadMsg').textContent='请选择新的对账单文件';document.getElementById('uploadModal').classList.add('open');}
+function renderRecords(records){}async function postRecord(fd,msg){if(!currentDetailId)return null;msg.textContent='保存中...';const r=await fetch('/api/history/'+currentDetailId+'/records',{method:'POST',body:fd});const d=await r.json();if(!r.ok){msg.textContent=d.error||'保存失败';return null}msg.textContent='已保存';load();return d}function openPayment(id){currentDetailId=id;document.getElementById('paymentRecordDate').value='';document.getElementById('paymentRecordAmount').value='';document.getElementById('paymentRecordText').value='';document.getElementById('paymentRecordFile').value='';document.getElementById('paymentRecordMsg').textContent='';document.getElementById('paymentModal').classList.add('open')}async function addPaymentRecord(){const msg=document.getElementById('paymentRecordMsg');const amount=document.getElementById('paymentRecordAmount').value.trim();const text=document.getElementById('paymentRecordText').value.trim();const date=document.getElementById('paymentRecordDate').value;const file=document.getElementById('paymentRecordFile').files[0];if(!date&&!amount&&!text&&!file){msg.textContent='日期、金额、说明、附件至少填一项';return}const fd=new FormData();fd.set('title','付款记录');fd.set('record_date',date);fd.set('amount',amount||0);fd.set('text_content',(amount?`付款金额：${fmtMoney(amount)}；`:'')+text);if(file)fd.set('file',file);const d=await postRecord(fd,msg);if(!d)return;setTimeout(()=>{document.getElementById('paymentModal').classList.remove('open');load();if(currentDetailId)view(currentDetailId)},300)}async function view(id){currentDetailId=id;const r=await fetch('/api/history/'+id);const d=await r.json();document.getElementById('modal').classList.add('open');switchDetailTab('compare');const s=d.summary||{};const arrivalDates=[...new Set((d.line_checks||[]).map(x=>x.erp_arrival_dates).filter(Boolean))].join('；')||'-';document.getElementById('detailSummary').textContent=`对账单编号：${s.statement_no||d.statement_no||'-'}　供应商：${s.supplier||d.supplier||'-'}　用途：${s.usage_remark||d.usage_remark||'-'}　对账金额：${s.statement_total||d.statement_total||'-'}　ERP金额：${s.erp_purchase_total||d.erp_purchase_total||'-'}　到库日期：${arrivalDates}`;document.getElementById('fileLinks').innerHTML=(d.files||[]).map(f=>`<a class="btn secondary" href="${f.url}" target="_blank">${f.label}</a>`).join('');document.getElementById('detailRows').innerHTML=(d.line_checks||[]).map((x,i)=>{const bad=x.quantity_status!=='PASS'||x.amount_status!=='PASS'||x.allocation_status==='OVER';return `<tr><td>${x.material_code||''}</td><td>${x.purchase_order_id||''}</td><td class="compare-cell"><div class="pair"><div><b>对账单</b><span>${x.delivery_date||''}</span></div><div><b>ERP下单</b><span>${x.erp_order_dates||'<em class="bad">无对应信息</em>'}</span></div><div><b>ERP到库</b><span>${x.erp_arrival_dates||'<em class="bad">无对应信息</em>'}</span></div></div></td><td class="compare-cell"><div class="pair"><div><b>本次</b><span>${x.current_quantity??x.statement_quantity??''}</span></div><div><b>累计</b><span><button class="cumulative-btn" type="button" onclick="openAllocationHistory('${id}','${x.statement_item_id}')">${x.cumulative_quantity??0}</button></span></div><div><b>ERP到库</b><span>${x.arrival_record_quantity??'<em class="bad">无对应信息</em>'}</span></div></div></td><td class="compare-cell"><div class="pair"><div><b>对账单</b><span>${fmtPrice(x.statement_unit_price)}</span></div><div><b>ERP</b><span>${x.erp_unit_price==null?'<em class="bad">无对应信息</em>':fmtPrice(x.erp_unit_price)}</span></div></div></td><td class="compare-cell"><div class="pair"><div><b>本次</b><span>${fmtMoney(x.current_amount??x.statement_amount)}</span></div><div><b>累计</b><span><button class="cumulative-btn" type="button" onclick="openAllocationHistory('${id}','${x.statement_item_id}')">${fmtMoney(x.cumulative_amount)}</button></span></div><div><b>ERP</b><span>${x.erp_amount==null?'<em class="bad">无对应信息</em>':fmtMoney(x.erp_amount)}</span></div></div></td><td><div class="pair"><div><b>到库</b><span class="${cls(x.quantity_status)}">${x.erp_purchase_quantity==null?'<em class="bad">无对应信息</em>':st(x.quantity_status)}</span></div><div><b>金额</b><span class="${cls(x.amount_status)}">${x.erp_amount==null?'<em class="bad">无对应信息</em>':st(x.amount_status)}</span></div><div><b>占用</b><span class="${x.allocation_status==='OVER'?'bad':'blueText'}">${x.allocation_status==='OVER'?'超额':x.allocation_status==='PASS'?'已占用':'<em class="bad">无对应信息</em>'}</span></div></div></td><td class="issue-cell">${x.issue_text||''}</td><td>${(x.quantity_status==='FAIL'||x.amount_status==='FAIL')?`<button class="btn secondary" onclick="approveLine('${id}',${i})">审核通过</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="9" class="muted">暂无对比结果</td></tr>';document.getElementById('recognitionRows').innerHTML=(d.statement_lines||[]).map(x=>`<tr><td>${x.customer_order_no||''}</td><td>${x.customer_material_no||''}</td><td>${x.delivery_no||''}</td><td>${x.delivery_date||''}</td><td>${x.product_name||''}</td><td>${x.supplier_spec||''}</td><td>${x.quantity||''}</td><td>${x.unit||''}</td><td>${fmtPrice(x.tax_inclusive_unit_price)}</td><td>${fmtMoney(x.tax_inclusive_amount)}</td></tr>`).join('')||'<tr><td colspan="10" class="muted">暂无对账单识别结果</td></tr>';renderCompareRows(id,d.line_checks||[]);renderEditableRecognition(id,d.statement_lines||[]);document.getElementById('detailActions').innerHTML=`${s.overall_status==='ERP_FAILED'?`<button class="btn" onclick="approve('${id}')">对账单内容可以核对正常</button>`:''}<button class="btn secondary" onclick="openPayment('${id}')">填写付款</button><button class="btn secondary" onclick="openInvoice('${id}')">上传发票</button>`;}
+let progressTimer=null,uploadFileMode='pdf';function setUploadFileMode(mode){uploadFileMode=mode;const file=document.getElementById('statementFile');const pick=document.querySelector('.file-drop .btn.ghost');const hint=document.getElementById('fileModeHint');for(const btn of document.querySelectorAll('[data-file-mode]'))btn.classList.toggle('active',btn.dataset.fileMode===mode);file.dataset.mode=mode;file.accept=mode==='pdf'?'application/pdf,.pdf,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';file.value='';document.getElementById('fileName').textContent='未选择文件';pick.textContent=mode==='pdf'?'选择对账单文件':'选择标准模板';hint.textContent=mode==='pdf'?'支持 PDF、图片、XLS、XLSX，系统提取关键数据后核对 ERP':'上传系统标准 xlsx 模板，按固定字段直接导入'}function validateUploadFile(file){if(!file)return'请选择对账单文件';const name=file.name.toLowerCase();if(uploadFileMode==='pdf'&&!/[.](pdf|jpe?g|png|webp|xlsx?)$/i.test(name))return'通用上传支持 PDF、图片、XLS、XLSX 文件';if(uploadFileMode==='excel'&&!name.endsWith('.xlsx'))return'模板上传请使用系统标准 xlsx 文件';return''}function updateUploadProgress(data){const percent=Math.max(0,Math.min(Number(data.percent||0),100));document.getElementById('progressBar').style.width=percent+'%';document.getElementById('progressPercent').textContent=percent+'%';document.getElementById('progressTitle').textContent=data.status==='done'?'处理完成':data.status==='error'?'处理失败':'正在处理';document.getElementById('progressDetail').textContent=(data.message||'处理中')+' · '+(data.step??0)+'/'+(data.total??8)}function startProgress(taskId){document.getElementById('uploadProgress').classList.add('open');updateUploadProgress({percent:0,step:0,total:8,message:'准备上传'});if(progressTimer)clearInterval(progressTimer);progressTimer=setInterval(async()=>{try{const r=await fetch('/api/progress/'+taskId);const d=await r.json();updateUploadProgress(d);if(d.status==='done'||d.status==='error'){clearInterval(progressTimer);progressTimer=null}}catch(e){}},700)}function resetUploadMode(){if(progressTimer){clearInterval(progressTimer);progressTimer=null}document.getElementById('uploadProgress').classList.remove('open');updateUploadProgress({percent:0,step:0,total:8,message:'-'});document.getElementById('recompareFrom').value='';document.getElementById('uploadTitle').textContent='新建对账单';document.getElementById('uploadSubmit').textContent='开始核对';document.getElementById('uploadSubmit').disabled=false;document.getElementById('uploadMsg').textContent='';setUploadFileMode(uploadFileMode);document.getElementById('fileIdentifier').value='';document.getElementById('erpStartDate').value='';document.getElementById('erpEndDate').value='';document.getElementById('uploadUsageRemark').value=''}
+async function recompare(id){resetUploadMode();document.getElementById('recompareFrom').value=id;document.getElementById('uploadTitle').textContent='重新比对';document.getElementById('uploadSubmit').textContent='上传并重新比对';document.getElementById('uploadMsg').textContent='请选择新的对账单文件';document.getElementById('uploadModal').classList.add('open');}
 
 
 let currentInvoiceRunId=null, currentInvoiceRawText='', invoiceProgressTimer=null;function setText(id,value){document.getElementById(id).textContent=value??'-'}function updateInvoiceProgress(data){const percent=Math.max(0,Math.min(Number(data.percent||0),100));document.getElementById('invoiceProgressBar').style.width=percent+'%';document.getElementById('invoiceProgressPercent').textContent=percent+'%';document.getElementById('invoiceProgressTitle').textContent=data.status==='done'?'识别完成':data.status==='error'?'识别失败':'正在识别';document.getElementById('invoiceProgressDetail').textContent=(data.message||'处理中')+' · '+(data.step??0)+'/'+(data.total??4)}function startInvoiceProgress(taskId){document.getElementById('invoiceProgress').classList.add('open');updateInvoiceProgress({percent:0,step:0,total:4,message:'准备识别发票'});if(invoiceProgressTimer)clearInterval(invoiceProgressTimer);invoiceProgressTimer=setInterval(async()=>{try{const r=await fetch('/api/progress/'+taskId);const d=await r.json();updateInvoiceProgress(d);if(d.status==='done'||d.status==='error'){clearInterval(invoiceProgressTimer);invoiceProgressTimer=null}}catch(e){}},500)}function resetInvoiceModal(){if(invoiceProgressTimer){clearInterval(invoiceProgressTimer);invoiceProgressTimer=null}currentInvoiceRunId=null;currentInvoiceRawText='';document.getElementById('invoiceProgress').classList.remove('open');updateInvoiceProgress({percent:0,step:0,total:4,message:'-'});document.getElementById('invoiceFile').value='';document.getElementById('invoiceFileName').textContent='未选择文件';for(const id of ['invoiceNumberEdit','invoiceDateEdit','invoiceTotalEdit'])document.getElementById(id).value='';for(const [id,value] of [['invoiceStatementNo','-'],['invoiceSupplier','-'],['invoiceStatementAmount','0.00'],['invoiceStatementTotal','0.00'],['invoiceTotalView','0.00'],['invoiceDiff','0.00'],['invoiceCheckStatus','待识别']])setText(id,value);document.getElementById('invoiceMsg').textContent='';document.getElementById('invoiceConfirm').disabled=true;document.getElementById('invoicePreview').disabled=false}function updateInvoiceCheck(){const a=Number(document.getElementById('invoiceTotalEdit').value||0);const b=Number(document.getElementById('invoiceStatementTotal').textContent||0);const diff=Number.isFinite(a)&&Number.isFinite(b)?a-b:0;setText('invoiceTotalView',Number.isFinite(a)?a.toFixed(2):'0.00');setText('invoiceDiff',diff.toFixed(2));setText('invoiceCheckStatus',Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(diff)<0.005?'通过':'金额不一致')}async function openInvoice(id){resetInvoiceModal();currentInvoiceRunId=id;document.getElementById('invoiceModal').classList.add('open');try{const r=await fetch('/api/history/'+id);const d=await r.json();const s=d.summary||{};setText('invoiceStatementNo',s.statement_no||d.statement_no||'-');setText('invoiceSupplier',s.supplier||d.supplier||'-');const total=fmtMoney(s.statement_total||d.statement_total||0);setText('invoiceStatementAmount',total);setText('invoiceStatementTotal',total);updateInvoiceCheck()}catch(e){document.getElementById('invoiceMsg').textContent='对账单信息读取失败'}}async function previewInvoice(){if(!currentInvoiceRunId)return;const file=document.getElementById('invoiceFile').files[0];if(!file){document.getElementById('invoiceMsg').textContent='请选择发票 PDF';return}const msg=document.getElementById('invoiceMsg');const btn=document.getElementById('invoicePreview');const taskId='invoice_'+Date.now()+'_'+Math.random().toString(16).slice(2);btn.disabled=true;msg.textContent='正在识别发票...';const fd=new FormData();fd.set('invoice_pdf',file);fd.set('task_id',taskId);startInvoiceProgress(taskId);const r=await fetch(`/api/statements/${currentInvoiceRunId}/invoice/preview`,{method:'POST',body:fd});const d=await r.json();if(invoiceProgressTimer){clearInterval(invoiceProgressTimer);invoiceProgressTimer=null}btn.disabled=false;if(!r.ok){updateInvoiceProgress({status:'error',percent:100,step:4,total:4,message:d.error||'识别失败'});msg.textContent=d.error||'识别失败';return}updateInvoiceProgress({status:'done',percent:100,step:4,total:4,message:'发票信息已识别，可修改后确认校验'});const inv=d.invoice||{};currentInvoiceRawText=inv.raw_text||'';document.getElementById('invoiceNumberEdit').value=inv.invoice_number||'';document.getElementById('invoiceDateEdit').value=inv.invoice_date||'';document.getElementById('invoiceTotalEdit').value=fmtMoney(inv.invoice_total);const total=fmtMoney(d.statement_total);setText('invoiceStatementAmount',total);setText('invoiceStatementTotal',total);updateInvoiceCheck();document.getElementById('invoiceConfirm').disabled=false;msg.textContent='识别完成，可以修改后确认校验'}async function confirmInvoice(){if(!currentInvoiceRunId)return;const msg=document.getElementById('invoiceMsg');const btn=document.getElementById('invoiceConfirm');btn.disabled=true;msg.textContent='正在校验并保存...';const payload={invoice_number:document.getElementById('invoiceNumberEdit').value,invoice_date:document.getElementById('invoiceDateEdit').value,invoice_total:document.getElementById('invoiceTotalEdit').value,raw_text:currentInvoiceRawText};const r=await fetch(`/api/statements/${currentInvoiceRunId}/invoice/confirm`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const d=await r.json();if(!r.ok){msg.textContent=d.error||'保存失败';btn.disabled=false;return}msg.textContent=d.summary?.invoice_status==='PASS'?'发票校验通过':'发票金额异常，已保存记录';setTimeout(()=>{document.getElementById('invoiceModal').classList.remove('open');const id=currentInvoiceRunId;resetInvoiceModal();load();view(id)},300)}
-async function showHistory(row){document.getElementById('historyModal').classList.add('open');document.getElementById('historyTitle').textContent='历史记录：'+(row.statement_no||row.original_filename||row.id);const r=await fetch('/api/history/'+row.id+'/runs');const d=await r.json();document.getElementById('historyRows').innerHTML=(d.rows||[]).map(x=>{const erp=(x.overall_status==='ERP_FAILED'||x.overall_status==='FAIL')?'FAIL':'PASS';return `<tr><td>${x.created_at||'-'}</td><td>${x.statement_total||'-'}</td><td>${x.erp_purchase_total||'-'}</td><td class="${cls(erp)}">${st(erp)}</td><td class="${cls(x.invoice_status)}">${st(x.invoice_status)}</td><td class="${cls(x.overall_status)}">${st(x.overall_status)}</td><td><a href="#" onclick="document.getElementById('historyModal').classList.remove('open');view('${x.id}');return false;">查看</a>　<a href="#" class="bad" onclick="deleteRow('${x.id}');return false;">删除</a></td></tr>`}).join('')||'<tr><td colspan="7" class="muted">暂无历史记录</td></tr>'}
+async function showHistory(row){document.getElementById('historyModal').classList.add('open');document.getElementById('historyTitle').textContent='历史记录：'+(row.statement_no||row.original_filename||row.id);const r=await fetch('/api/history/'+row.id+'/runs');const d=await r.json();document.getElementById('historyRows').innerHTML=(d.rows||[]).map(x=>{const erp=(x.overall_status==='ERP_FAILED'||x.overall_status==='FAIL')?'FAIL':(x.erp_purchase_total>0?'PASS':'PENDING');return `<tr><td>${x.created_at||'-'}</td><td>${x.statement_total||'-'}</td><td>${x.erp_purchase_total||'-'}</td><td class="${cls(erp)}">${st(erp)}</td><td class="${cls(x.invoice_status)}">${st(x.invoice_status)}</td><td class="${cls(x.overall_status)}">${st(x.overall_status)}</td><td><a href="#" onclick="document.getElementById('historyModal').classList.remove('open');view('${x.id}');return false;">查看</a>　<a href="#" class="bad" onclick="deleteRow('${x.id}');return false;">删除</a></td></tr>`}).join('')||'<tr><td colspan="7" class="muted">暂无历史记录</td></tr>'}
+let compareSortMode='abnormal', currentCompareRows=[], currentCompareStatementId=null;
+function renderCompareRows(statementId,rows,remember=true){
+  if(remember){
+    currentCompareStatementId=statementId;
+    currentCompareRows=[...(rows||[])];
+  }
+  const displayRows=[...(rows||[])];
+  if(compareSortMode==='abnormal'){
+    displayRows.sort((a,b)=>{
+      const abnormal=x=>x.manual_approved?1:(
+        x.quantity_status!=='PASS'||x.amount_status!=='PASS'||x.allocation_status==='OVER'?0:1
+      );
+      return abnormal(a)-abnormal(b);
+    });
+  }
+  const body=document.getElementById('detailRows');
+  const header=document.querySelector('.compare-card-table thead tr');
+  if(header&&header.firstElementChild?.textContent!=='序号'){
+    header.insertAdjacentHTML('afterbegin','<th>序号</th>');
+  }
+  body.innerHTML=displayRows.map((x,rowIndex)=>{
+    const matched=x.erp_purchase_quantity!=null&&x.erp_unit_price!=null;
+    const quantityPass=x.quantity_status==='PASS';
+    const amountPass=x.amount_status==='PASS';
+    const manualApproved=Boolean(x.manual_approved);
+    const material=x.material_code||'未识别物料编码';
+    const statementQty=x.current_quantity??x.statement_quantity??0;
+    const statementAmount=x.current_amount??x.statement_amount??0;
+    const erpPanel=manualApproved?`
+      <div class="erp-manual">
+        <strong>人工确认无误</strong>
+        <span>本行忽略 ERP 匹配数据</span>
+      </div>`:matched?`
+      <div class="erp-metric-grid">
+        <div><span>ERP下单</span><strong>${x.erp_order_dates||'-'}</strong></div>
+        <div><span>ERP到库</span><strong>${x.erp_arrival_dates||'-'}</strong></div>
+        <div><span>到库数量</span><strong>${x.arrival_record_quantity??'-'}</strong></div>
+        <div><span>ERP单价</span><strong>${fmtPrice(x.erp_unit_price)}</strong></div>
+      </div>`:`
+      <div class="erp-empty">
+        <strong>未匹配到 ERP 记录</strong>
+        <span>请检查物料编码或采购单</span>
+      </div>`;
+    return `<tr class="compare-business-row">
+      <td class="compare-seq">${rowIndex+1}</td>
+      <td>
+        <div class="material-block">
+          <strong class="${x.material_code?'':'bad'}">${esc(material)}</strong>
+          <span>采购单：${esc(x.purchase_order_id||'未识别')}</span>
+          ${x.merged_count>1?`<span class="blueText">已合并 ${x.merged_count} 行</span>`:''}
+        </div>
+      </td>
+      <td>
+        <div class="statement-metric-grid">
+          <div><span>对账日期</span><strong>${x.delivery_date||'-'}</strong></div>
+          <div><span>数量</span><strong>${statementQty}</strong></div>
+          <div><span>单价</span><strong>${fmtPrice(x.statement_unit_price)}</strong></div>
+          <div><span>金额</span><strong>${fmtMoney(statementAmount)}</strong></div>
+        </div>
+      </td>
+      <td>${erpPanel}</td>
+      <td>
+        <div class="cumulative-block">
+          <strong class="cumulative-value">${fmtMoney(x.cumulative_amount)}</strong>
+          <button type="button" onclick="openAllocationHistory('${statementId}','${x.statement_item_id}')">点击查看历史</button>
+        </div>
+      </td>
+      <td>
+        <div class="result-block">
+          <div><span>到库</span><em class="result-chip ${quantityPass?'pass':'fail'}">${manualApproved?'人工通过':matched?st(x.quantity_status):'未匹配'}</em></div>
+          <div><span>金额</span><em class="result-chip ${amountPass?'pass':'fail'}">${manualApproved?'人工通过':matched?st(x.amount_status):'未匹配'}</em></div>
+          <p class="${quantityPass&&amountPass?'ok':'bad'}">${manualApproved?'人工确认无误，已忽略ERP差异':matched?(x.issue_text||'等待校验'):'未匹配到 ERP 记录'}</p>
+        </div>
+      </td>
+      <td>
+        ${manualApproved
+          ?'<span class="manual-approved-chip">人工已确认</span>'
+          :`<button class="btn secondary compare-action" type="button" onclick="manualApproveLine('${statementId}','${(x.statement_item_ids||[x.statement_item_id]).join(',')}')">人工确认无误</button>`}
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" class="muted">暂无对比结果</td></tr>';
+}
+function setCompareSort(mode){
+  compareSortMode=mode;
+  document.getElementById('sortCompareAbnormal').classList.toggle('active',mode==='abnormal');
+  document.getElementById('sortCompareOriginal').classList.toggle('active',mode==='original');
+  renderCompareRows(currentCompareStatementId,currentCompareRows,false);
+}
+document.getElementById('sortCompareAbnormal').onclick=()=>setCompareSort('abnormal');
+document.getElementById('sortCompareOriginal').onclick=()=>setCompareSort('original');
+async function manualApproveLine(statementId,itemId){
+  let modal=document.getElementById('manualDecisionModal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='manualDecisionModal';
+    modal.className='modal';
+    modal.style.zIndex='1500';
+    modal.innerHTML=`
+      <div class="invoice-dialog" style="width:min(560px,calc(100vw - 48px))">
+        <div class="dialog-head">
+          <h2>人工确认对账结果</h2>
+          <button class="btn secondary" type="button" data-manual-cancel>返回</button>
+        </div>
+        <div class="invoice-section">
+          <strong style="display:block;font-size:16px;margin-bottom:10px">确认该笔数据没有问题？</strong>
+          <p style="margin:0;line-height:1.8;color:#475467">
+            确认后，本行以操作人的判断为最终结果，直接标记为“人工通过”，不再使用 ERP
+            的未匹配、数量或金额差异进行拦截。
+          </p>
+        </div>
+        <div class="invoice-actions" style="margin-top:16px">
+          <span data-manual-message class="muted">等待操作人确认</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn secondary" type="button" data-manual-cancel>取消</button>
+            <button class="btn" type="button" data-manual-confirm>确认无误</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelectorAll('[data-manual-cancel]').forEach(button=>{
+      button.onclick=()=>modal.classList.remove('open');
+    });
+    modal.querySelector('[data-manual-confirm]').onclick=confirmManualApproveLine;
+  }
+  modal.dataset.statementId=statementId;
+  modal.dataset.itemId=itemId;
+  modal.querySelector('[data-manual-message]').className='muted';
+  modal.querySelector('[data-manual-message]').textContent='等待操作人确认';
+  modal.querySelector('[data-manual-confirm]').disabled=false;
+  modal.classList.add('open');
+}
+async function confirmManualApproveLine(){
+  const modal=document.getElementById('manualDecisionModal');
+  const statementId=modal.dataset.statementId;
+  const itemIds=modal.dataset.itemId.split(',').filter(Boolean);
+  const message=modal.querySelector('[data-manual-message]');
+  const confirmButton=modal.querySelector('[data-manual-confirm]');
+  confirmButton.disabled=true;
+  message.className='blueText';
+  message.textContent='正在保存人工确认结果…';
+  try{
+    for(const itemId of itemIds){
+      const r=await fetch(`/api/statements/${statementId}/items/${itemId}/manual-approve`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({reason:'操作人确认该笔合并数据无问题，最终结果为人工通过'})
+      });
+      const d=await r.json();
+      if(!r.ok)throw new Error(d.error||'人工确认失败');
+    }
+    message.className='ok';
+    message.textContent='确认成功：该笔已按人工判断通过';
+    await view(statementId);
+    await load();
+    setTimeout(()=>modal.classList.remove('open'),900);
+  }catch(error){
+    message.className='bad';
+    message.textContent=`确认失败：${error.message||'请稍后重试'}`;
+    confirmButton.disabled=false;
+  }
+}
+async function openAllocationHistory(statementId,itemId){
+  const modal=document.getElementById('allocationHistoryModal');
+  const rows=document.getElementById('allocationHistoryRows');
+  modal.classList.add('open');
+  rows.innerHTML='<tr><td colspan="8" class="muted">正在读取累计占用历史...</td></tr>';
+  const r=await fetch(`/api/statements/${statementId}/items/${itemId}/allocation-history`);
+  const d=await r.json();
+  if(!r.ok){
+    rows.innerHTML=`<tr><td colspan="8" class="bad">${esc(d.error||'读取失败')}</td></tr>`;
+    return;
+  }
+  document.getElementById('allocationHistoryTitle').textContent='累计占用历史';
+  document.getElementById('allocationHistorySummary').textContent=
+    `供应商：${d.supplier||'-'}　物料：${d.material_code||'-'}　单价：${fmtPrice(d.unit_price)}`;
+  rows.innerHTML=(d.rows||[]).map(x=>`<tr${x.is_current?' style="background:#edf3ff"':''}>
+    <td>${x.statement_period||'-'}${x.is_current?'（本次）':''}</td>
+    <td><a href="#" onclick="document.getElementById('allocationHistoryModal').classList.remove('open');view('${x.statement_id}');return false">${x.statement_no||x.original_filename||x.statement_id}</a></td>
+    <td>${x.delivery_date||'-'}</td>
+    <td>${x.current_quantity??0}</td>
+    <td>${fmtMoney(x.current_amount)}</td>
+    <td>${x.cumulative_quantity??0}</td>
+    <td>${fmtMoney(x.cumulative_amount)}</td>
+    <td>${x.created_at||'-'}</td>
+  </tr>`).join('')||'<tr><td colspan="8" class="muted">暂无历史占用记录</td></tr>';
+}
+document.getElementById('closeAllocationHistory').onclick=()=>document.getElementById('allocationHistoryModal').classList.remove('open');
 async function deleteRow(id){if(!confirm('确认删除这条对账记录？删除后不可恢复。'))return;const r=await fetch('/api/history/'+id,{method:'DELETE'});const d=await r.json();if(!r.ok){alert(d.error||'删除失败');return}load()}
 async function approveLine(id,index){const r=await fetch('/api/history/'+id+'/lines/'+index+'/approve',{method:'POST'});const d=await r.json();if(!r.ok){alert(d.error||'审核失败');return}await view(id);load()}
-async function approve(id){await fetch('/api/statements/'+id+'/approve-statement',{method:'POST'});await view(id);load()}for(const btn of document.querySelectorAll('.tab'))btn.onclick=()=>switchDetailTab(btn.dataset.tab);document.getElementById('statementFile').onchange=e=>{const file=e.target.files&&e.target.files[0];document.getElementById('fileName').textContent=file?file.name:'未选择文件';const mark=document.getElementById('fileIdentifier');if(file&&!mark.value){mark.value=file.name.replace(/\.[^.]+$/,'').replace(/\(\d+\)$/,'')}};document.getElementById('closeModal').onclick=()=>document.getElementById('modal').classList.remove('open');document.getElementById('closeHistory').onclick=()=>document.getElementById('historyModal').classList.remove('open');document.getElementById('closeInvoice').onclick=()=>document.getElementById('invoiceModal').classList.remove('open');document.getElementById('closePayment').onclick=()=>document.getElementById('paymentModal').classList.remove('open');document.getElementById('invoiceFile').onchange=e=>{const file=e.target.files&&e.target.files[0];document.getElementById('invoiceFileName').textContent=file?file.name:'未选择文件';document.getElementById('invoiceConfirm').disabled=true;document.getElementById('invoiceMsg').textContent=''};document.getElementById('invoiceTotalEdit').oninput=updateInvoiceCheck;document.getElementById('invoicePreview').onclick=previewInvoice;document.getElementById('invoiceConfirm').onclick=confirmInvoice;document.getElementById('search').onclick=()=>{page=1;load()};document.getElementById('reset').onclick=()=>{for(const id of ['createdAt','supplier','statementNo','usageRemark','paymentKeyword','reconciliationLog','invoiceLog','paymentDate','status'])document.getElementById(id).value='';page=1;load()};document.getElementById('pageSize').onchange=e=>{pageSize=Number(e.target.value)||20;page=1;load()};document.getElementById('first').onclick=()=>{page=1;load()};document.getElementById('prev').onclick=()=>{if(page>1){page--;load()}};document.getElementById('next').onclick=()=>{if(page<totalPages()){page++;load()}};document.getElementById('last').onclick=()=>{page=totalPages();load()};document.getElementById('jump').onclick=()=>{const p=Math.max(1,Math.min(Number(document.getElementById('jumpPage').value)||1,totalPages()));page=p;load()};document.getElementById('jumpPage').onkeydown=e=>{if(e.key==='Enter')document.getElementById('jump').click()};document.getElementById('toggleUpload').onclick=()=>{resetUploadMode();document.getElementById('uploadModal').classList.add('open')};document.getElementById('closeUpload').onclick=()=>document.getElementById('uploadModal').classList.remove('open');document.getElementById('exportSupplier').onclick=()=>{const params=q();params.delete('page');params.delete('page_size');location.href='/api/statements/export?'+params.toString()};
-document.getElementById('uploadForm').onsubmit=async e=>{e.preventDefault();const msg=document.getElementById('uploadMsg');const submit=document.getElementById('uploadSubmit');const taskId='task_'+Date.now()+'_'+Math.random().toString(16).slice(2);msg.textContent='处理中...';submit.disabled=true;const fd=new FormData(e.currentTarget);fd.set('task_id',taskId);startProgress(taskId);const r=await fetch('/api/statements',{method:'POST',body:fd});const d=await r.json();if(progressTimer){clearInterval(progressTimer);progressTimer=null}if(!r.ok&&d.duplicate){updateUploadProgress({status:'done',percent:100,step:8,total:8,message:'该对账单已存在'});msg.textContent='该对账单已存在，已打开已有记录';submit.disabled=false;view(d.existing.id);load();return}if(!r.ok){updateUploadProgress({status:'error',percent:100,step:8,total:8,message:d.error||'处理失败'});msg.textContent=d.error||'处理失败';submit.disabled=false;return}updateUploadProgress({status:'done',percent:100,step:8,total:8,message:'处理完成'});msg.textContent='处理完成';setTimeout(()=>{document.getElementById('uploadModal').classList.remove('open');resetUploadMode();load();view(d.id)},350)};const params=new URLSearchParams(location.search);if(params.get('status'))document.getElementById('status').value=params.get('status');load();
+async function approve(id){await fetch('/api/statements/'+id+'/approve-statement',{method:'POST'});await view(id);load()}for(const btn of document.querySelectorAll('.tab'))btn.onclick=()=>switchDetailTab(btn.dataset.tab);for(const btn of document.querySelectorAll('[data-file-mode]'))btn.onclick=()=>setUploadFileMode(btn.dataset.fileMode);document.getElementById('statementFile').onchange=e=>{const file=e.target.files&&e.target.files[0];const err=validateUploadFile(file);if(err&&file){document.getElementById('uploadMsg').textContent=err;e.target.value='';document.getElementById('fileName').textContent='未选择文件';return}document.getElementById('uploadMsg').textContent='';document.getElementById('fileName').textContent=file?file.name:'未选择文件';};document.getElementById('closeModal').onclick=()=>document.getElementById('modal').classList.remove('open');document.getElementById('closeHistory').onclick=()=>document.getElementById('historyModal').classList.remove('open');document.getElementById('supplierSummary').onclick=()=>{location.href='/supplier-summary'};document.getElementById('supplierSummaryNav').onclick=e=>{e.preventDefault();location.href='/supplier-summary'};document.getElementById('summaryStrip').onclick=e=>{const item=e.target.closest('[data-summary-filter]');if(item)applySummaryFilter(item.dataset.summaryFilter)};document.getElementById('closeInvoice').onclick=()=>document.getElementById('invoiceModal').classList.remove('open');document.getElementById('closePayment').onclick=()=>document.getElementById('paymentModal').classList.remove('open');document.getElementById('invoiceFile').onchange=e=>{const file=e.target.files&&e.target.files[0];document.getElementById('invoiceFileName').textContent=file?file.name:'未选择文件';document.getElementById('invoiceConfirm').disabled=true;document.getElementById('invoiceMsg').textContent=''};document.getElementById('invoiceTotalEdit').oninput=updateInvoiceCheck;document.getElementById('invoicePreview').onclick=previewInvoice;document.getElementById('invoiceConfirm').onclick=confirmInvoice;document.getElementById('search').onclick=()=>{page=1;load()};document.getElementById('reset').onclick=()=>{for(const id of ['supplier','statementNo','supplierCode','usageRemark','createdStart','createdEnd','statementStart','statementEnd','amountMin','amountMax','paymentStart','paymentEnd','paymentAmountMin','paymentAmountMax','invoiceStart','invoiceEnd','invoiceAmountMin','invoiceAmountMax','status'])document.getElementById(id).value='';for(const opt of document.querySelectorAll('#paymentStatus input,#invoiceAmountStatus input'))opt.checked=false;page=1;load()};document.getElementById('pageSize').onchange=e=>{pageSize=Number(e.target.value)||20;page=1;load()};document.getElementById('first').onclick=()=>{page=1;load()};document.getElementById('prev').onclick=()=>{if(page>1){page--;load()}};document.getElementById('next').onclick=()=>{if(page<totalPages()){page++;load()}};document.getElementById('last').onclick=()=>{page=totalPages();load()};document.getElementById('jump').onclick=()=>{const p=Math.max(1,Math.min(Number(document.getElementById('jumpPage').value)||1,totalPages()));page=p;load()};document.getElementById('jumpPage').onkeydown=e=>{if(e.key==='Enter')document.getElementById('jump').click()};document.getElementById('toggleUpload').onclick=()=>{resetUploadMode();document.getElementById('uploadModal').classList.add('open')};document.getElementById('closeUpload').onclick=()=>document.getElementById('uploadModal').classList.remove('open');document.getElementById('exportSupplier').onclick=()=>{const params=q();params.delete('page');params.delete('page_size');location.href='/api/statements/export?'+params.toString()};
+document.getElementById('toggleMore').onclick=()=>{const panel=document.querySelector('.filter-panel');const open=panel.classList.toggle('expanded');document.getElementById('toggleMore').textContent=open?'收起筛选':'更多筛选'};
+const resetBase=document.getElementById('reset').onclick;
+document.getElementById('reset').onclick=()=>{resetBase();syncAllRangeFields()};
+function clearSupplierMatch(){
+  document.getElementById('supplierConfirmModal').classList.remove('open');
+  document.getElementById('supplierMatchField').style.display='none';
+  document.getElementById('supplierMatchLabel').textContent='合作商（必选）';
+  document.getElementById('selectedSupplierCode').innerHTML='<option value="">请选择已有合作商</option>';
+  document.getElementById('selectedSupplierName').value='';
+  document.getElementById('statementImportToken').value='';
+  document.getElementById('fileIdentifier').value='';
+  document.getElementById('selectedSupplierCode').dataset.statementMonth='';
+  document.getElementById('supplierConfirmSelect').innerHTML='<option value="">请选择已有合作商</option>';
+  document.getElementById('supplierConfirmMsg').textContent='';
+  document.getElementById('detectedSupplierView').textContent='-';
+  document.getElementById('pendingFilePreview').removeAttribute('href');
+}
+document.getElementById('selectedSupplierCode').onchange=e=>{
+  const option=e.target.selectedOptions[0];
+  document.getElementById('selectedSupplierName').value=option?.dataset.name||'';
+  const month=e.target.dataset.statementMonth||'';
+  document.getElementById('fileIdentifier').value=e.target.value&&month?`${e.target.value}_${month}`:'';
+  document.getElementById('uploadSubmit').disabled=!e.target.value;
+};
+document.getElementById('toggleUpload').addEventListener('click',clearSupplierMatch);
+document.getElementById('cancelSupplierConfirm').onclick=()=>{
+  clearSupplierMatch();
+  document.getElementById('uploadSubmit').disabled=false;
+  document.getElementById('uploadSubmit').textContent='开始核对';
+  document.getElementById('uploadMsg').textContent='已取消合作商确认，可重新选择文件上传';
+};
+async function searchSupplierForConfirm(){
+  const keyword=document.getElementById('supplierSearchKeyword').value.trim();
+  const msg=document.getElementById('supplierConfirmMsg');
+  if(!keyword){msg.textContent='请输入公司名称或简称';return}
+  msg.textContent='正在查询 ERP 合作商...';
+  const r=await fetch('/api/erp/suppliers?q='+encodeURIComponent(keyword));
+  const d=await r.json();
+  if(!r.ok){msg.textContent=d.error||'查询失败';return}
+  const rows=d.rows||[];
+  document.getElementById('supplierConfirmSelect').innerHTML='<option value="">请选择已有合作商</option>'+
+    rows.map(x=>`<option value="${esc(x.code)}" data-name="${esc(x.name)}">${esc(x.name)}（${esc(x.code)}）</option>`).join('');
+  msg.textContent=rows.length?`找到 ${rows.length} 家，请核对名称和编码`:'ERP 中没有找到该合作商，不允许继续处理';
+}
+document.getElementById('searchSupplierConfirm').onclick=searchSupplierForConfirm;
+document.getElementById('supplierSearchKeyword').onkeydown=e=>{
+  if(e.key==='Enter'){e.preventDefault();searchSupplierForConfirm()}
+};
+document.getElementById('confirmSupplierAndRecognize').onclick=()=>{
+  const select=document.getElementById('supplierConfirmSelect');
+  const option=select.selectedOptions[0];
+  const msg=document.getElementById('supplierConfirmMsg');
+  if(!select.value){
+    msg.textContent='必须选择带编码的 ERP 合作商后才能继续';
+    return;
+  }
+  const target=document.getElementById('selectedSupplierCode');
+  target.innerHTML=`<option value="${esc(select.value)}" data-name="${esc(option?.dataset.name||'')}">${esc(option?.dataset.name||'')}（${esc(select.value)}）</option>`;
+  target.value=select.value;
+  document.getElementById('selectedSupplierName').value=option?.dataset.name||'';
+  const month=target.dataset.statementMonth||'';
+  document.getElementById('fileIdentifier').value=month?`${select.value}_${month}`:select.value;
+  document.getElementById('supplierConfirmModal').classList.remove('open');
+  document.getElementById('uploadSubmit').disabled=false;
+  document.getElementById('uploadSubmit').textContent='正在完整识别';
+  document.getElementById('uploadForm').requestSubmit();
+};
+let pendingOverwriteStatement=null;
+function confirmExistingStatement(existing){
+  const supplier=existing?.supplier||existing?.supplier_code||'该合作商';
+  const period=existing?.statement_period||'该账期';
+  pendingOverwriteStatement=existing;
+  document.getElementById('overwriteStatementIdentity').textContent=
+    `${supplier}　${period}　${existing?.statement_total||'0.00'} 元`;
+  document.getElementById('statementOverwriteModal').classList.add('open');
+}
+function cancelStatementOverwrite(){
+  pendingOverwriteStatement=null;
+  document.getElementById('statementOverwriteModal').classList.remove('open');
+  updateUploadProgress({status:'done',percent:100,step:8,total:8,message:'已取消覆盖，原对账单保持不变'});
+  document.getElementById('uploadMsg').textContent='未覆盖，原对账单保持不变';
+  document.getElementById('uploadSubmit').disabled=false;
+  document.getElementById('uploadSubmit').textContent='开始核对';
+  document.getElementById('uploadModal').classList.remove('open');
+  clearSupplierMatch();
+  resetUploadMode();
+  load();
+}
+document.getElementById('cancelStatementOverwrite').onclick=cancelStatementOverwrite;
+document.getElementById('cancelStatementOverwriteTop').onclick=cancelStatementOverwrite;
+document.getElementById('confirmStatementOverwrite').onclick=()=>{
+  const existing=pendingOverwriteStatement;
+  if(!existing?.id)return;
+  pendingOverwriteStatement=null;
+  document.getElementById('statementOverwriteModal').classList.remove('open');
+  document.getElementById('recompareFrom').value=existing.id;
+  document.getElementById('uploadMsg').textContent='已确认覆盖，正在更新原对账单...';
+  document.getElementById('uploadSubmit').disabled=false;
+  document.getElementById('uploadSubmit').textContent='正在覆盖';
+  document.getElementById('uploadForm').requestSubmit();
+};
+let progressStartedAt=0;
+let latestProgress={status:'running',percent:0,step:0,total:8,message:'准备上传'};
+let progressTaskId='';
+let progressMisses=0;
+const progressMaxWaitMs=10*60*1000;
+function renderTimedProgress(){
+  const elapsed=Math.max(0,Math.floor((Date.now()-progressStartedAt)/1000));
+  const percent=Math.max(0,Math.min(Number(latestProgress.percent||0),100));
+  document.getElementById('progressBar').style.width=percent+'%';
+  document.getElementById('progressPercent').textContent=percent+'%';
+  document.getElementById('progressTitle').textContent=
+    latestProgress.status==='done'?'处理完成':
+    latestProgress.status==='error'?'处理失败':
+    latestProgress.status==='waiting'?'等待操作':'正在处理';
+  const waitingHint=elapsed>=30&&latestProgress.status==='running'
+    ?'，文件较复杂，仍在处理中，请勿关闭窗口'
+    :'';
+  document.getElementById('progressDetail').textContent=
+    `${latestProgress.message||'处理中'} · 处理步骤 ${latestProgress.step??0}/${latestProgress.total??8} · 已用时 ${elapsed} 秒${waitingHint}`;
+}
+updateUploadProgress=function(data){
+  latestProgress={...latestProgress,...data};
+  renderTimedProgress();
+};
+startProgress=function(taskId){
+  document.getElementById('uploadProgress').classList.add('open');
+  progressStartedAt=Date.now();
+  progressTaskId=taskId;
+  progressMisses=0;
+  latestProgress={status:'running',percent:3,step:0,total:8,message:'正在上传文件'};
+  renderTimedProgress();
+  if(progressTimer)clearInterval(progressTimer);
+  progressTimer=setInterval(async()=>{
+    const elapsed=Date.now()-progressStartedAt;
+    if(elapsed>=progressMaxWaitMs&&latestProgress.status==='running'){
+      latestProgress={status:'error',percent:100,step:8,total:8,message:'识别超时，请重新提交；已完成的同一文件会复用缓存'};
+      renderTimedProgress();
+      clearInterval(progressTimer);
+      progressTimer=null;
+      document.getElementById('uploadMsg').textContent='识别超时，请重新提交';
+      const submit=document.getElementById('uploadSubmit');
+      submit.disabled=false;
+      submit.textContent='重新开始核对';
+      return;
+    }
+    renderTimedProgress();
+    try{
+      const r=await fetch('/api/progress/'+taskId);
+      if(!r.ok){
+        progressMisses++;
+        if(progressMisses>=6){
+          latestProgress={status:'error',percent:100,step:8,total:8,message:'服务器任务已失效，请重新提交'};
+          renderTimedProgress();
+          clearInterval(progressTimer);
+          progressTimer=null;
+          document.getElementById('uploadMsg').textContent='服务器任务已失效，请重新提交';
+          const submit=document.getElementById('uploadSubmit');
+          submit.disabled=false;
+          submit.textContent='重新开始核对';
+        }
+        return;
+      }
+      const data=await r.json();
+      progressMisses=0;
+      latestProgress={...latestProgress,...data};
+      renderTimedProgress();
+      if(data.status==='done'||data.status==='error'){
+        clearInterval(progressTimer);
+        progressTimer=null;
+      }
+    }catch(error){
+      progressMisses++;
+      latestProgress.message=progressMisses>=6
+        ?'网络连接已中断，请重新提交'
+        :'网络响应较慢，正在继续等待服务器';
+      renderTimedProgress();
+      if(progressMisses>=6){
+        latestProgress.status='error';
+        clearInterval(progressTimer);
+        progressTimer=null;
+        document.getElementById('uploadMsg').textContent='网络连接已中断，请重新提交';
+        const submit=document.getElementById('uploadSubmit');
+        submit.disabled=false;
+        submit.textContent='重新开始核对';
+      }
+    }
+  },500);
+};
+syncAllRangeFields();
+setUploadFileMode('pdf');
+document.getElementById('uploadForm').onsubmit=async e=>{
+  e.preventDefault();
+  const msg=document.getElementById('uploadMsg');
+  const submit=document.getElementById('uploadSubmit');
+  const token=document.getElementById('statementImportToken').value;
+  const file=document.getElementById('statementFile').files[0];
+  if(!token){
+    const err=validateUploadFile(file);
+    if(err){msg.textContent=err;return}
+  }
+  const taskId='task_'+Date.now()+'_'+Math.random().toString(16).slice(2);
+  msg.textContent=token?'正在保存...':'正在识别...';
+  submit.disabled=true;
+  const fd=new FormData(e.currentTarget);
+  fd.set('task_id',taskId);
+  startProgress(taskId);
+  let r,d;
+  try{
+    r=await fetch('/api/statements',{method:'POST',body:fd});
+    d=await r.json();
+  }catch(error){
+    if(progressTimer){clearInterval(progressTimer);progressTimer=null}
+    updateUploadProgress({
+      status:'error',percent:100,step:0,total:8,
+      message:'连接已中断，请重新提交；已识别的同一文件会直接复用缓存'
+    });
+    msg.textContent='连接已中断，请重新提交';
+    submit.disabled=false;
+    submit.textContent='重新开始核对';
+    return;
+  }
+  if(progressTimer){clearInterval(progressTimer);progressTimer=null}
+  if(!r.ok&&d.needs_supplier){
+    document.getElementById('statementImportToken').value=d.import_token||'';
+    document.getElementById('selectedSupplierCode').dataset.statementMonth=d.statement_month||'';
+    const select=document.getElementById('supplierConfirmSelect');
+    document.getElementById('detectedSupplierView').textContent=d.detected_supplier||'未识别到公司名';
+    document.getElementById('supplierSearchKeyword').value=d.detected_supplier||'';
+    select.innerHTML='<option value="">请选择已有合作商</option>'+
+      (d.candidates||[]).map(x=>`<option value="${esc(x.code)}" data-name="${esc(x.name)}">${esc(x.name)}（${esc(x.code)}）</option>`).join('');
+    const candidates=d.candidates||[];
+    if(candidates.length===1)select.value=candidates[0].code;
+    const preview=document.getElementById('pendingFilePreview');
+    preview.href=d.preview_url||'#';
+    preview.textContent=`查看原文件：${d.original_filename||'已上传文件'}`;
+    document.getElementById('supplierConfirmMsg').textContent=candidates.length
+      ?'请对照原文件中的公司名称，再确认 ERP 合作商'
+      :'ERP 中未找到候选合作商，不能继续识别';
+    document.getElementById('supplierConfirmModal').classList.add('open');
+    updateUploadProgress({status:'waiting',percent:25,step:2,total:8,message:'请确认合作商，确认后开始完整识别'});
+    msg.textContent='等待确认合作商';
+    submit.disabled=true;
+    submit.textContent='等待确认合作商';
+    return;
+  }
+  if(!r.ok&&d.duplicate){
+    updateUploadProgress({status:'waiting',percent:90,step:7,total:8,message:'该对账单已存在，请确认是否覆盖'});
+    confirmExistingStatement(d.existing);
+    return;
+  }
+  if(!r.ok&&d.identity_conflict){
+    updateUploadProgress({status:'waiting',percent:90,step:7,total:8,message:'该合作商本月对账单已存在，请确认是否覆盖'});
+    confirmExistingStatement(d.existing);
+    return;
+  }
+  if(!r.ok){
+    updateUploadProgress({status:'error',percent:100,step:8,total:8,message:d.error||'处理失败'});
+    msg.textContent=d.error||'处理失败';
+    submit.disabled=false;
+    submit.textContent=token?'继续完整识别':'重新开始核对';
+    if(d.supplier_selection_invalid){
+      document.getElementById('supplierConfirmMsg').textContent=d.error;
+      document.getElementById('supplierConfirmModal').classList.add('open');
+    }
+    return;
+  }
+  updateUploadProgress({status:'done',percent:100,step:8,total:8,message:'处理完成'});
+  msg.textContent='处理完成';
+  setTimeout(()=>{
+    document.getElementById('uploadModal').classList.remove('open');
+    clearSupplierMatch();resetUploadMode();load();view(d.id);
+  },350);
+};
+const params=new URLSearchParams(location.search);
+if(params.get('status'))document.getElementById('status').value=params.get('status');
+load();
+
+
+// 反馈功能
+let currentFeedbackId=null;
+function openFeedback(id){
+  currentFeedbackId=id;
+  document.getElementById('feedbackType').value='confirm';
+  document.getElementById('feedbackReason').value='';
+  document.getElementById('feedbackInvoiceItemId').value='';
+  document.getElementById('feedbackStatementItemId').value='';
+  document.getElementById('feedbackMsg').textContent='';
+  document.getElementById('manualLinkFields').style.display='none';
+  document.getElementById('feedbackModal').classList.add('open');
+}
+document.getElementById('feedbackType').onchange=e=>{
+  const type=e.target.value;
+  document.getElementById('manualLinkFields').style.display=type==='manual_link'?'block':'none';
+};
+document.getElementById('closeFeedback').onclick=()=>document.getElementById('feedbackModal').classList.remove('open');
+document.getElementById('submitFeedback').onclick=async()=>{
+  if(!currentFeedbackId)return;
+  const msg=document.getElementById('feedbackMsg');
+  const btn=document.getElementById('submitFeedback');
+  btn.disabled=true;
+  msg.textContent='提交中...';
+  const payload={
+    reconciliation_id:currentFeedbackId,
+    feedback_type:document.getElementById('feedbackType').value,
+    feedback_reason:document.getElementById('feedbackReason').value
+  };
+  if(payload.feedback_type==='manual_link'){
+    payload.invoice_item_id=document.getElementById('feedbackInvoiceItemId').value;
+    payload.statement_item_id=document.getElementById('feedbackStatementItemId').value;
+    if(!payload.invoice_item_id||!payload.statement_item_id){
+      msg.textContent='手动关联需要填写发票明细ID和对账单明细ID';
+      btn.disabled=false;
+      return;
+    }
+  }
+  try{
+    const r=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(!r.ok){
+      msg.textContent=d.message||d.error||'提交失败';
+      btn.disabled=false;
+      return;
+    }
+    msg.textContent='反馈提交成功';
+    setTimeout(()=>{
+      document.getElementById('feedbackModal').classList.remove('open');
+      load();
+    },800);
+  }catch(e){
+    msg.textContent='网络错误，请重试';
+    btn.disabled=false;
+  }
+};
+
+function updateBatchButton(){const checked=document.querySelectorAll('.row-check:checked');const btn=document.getElementById('batchConfirm');if(checked.length>0){btn.style.display='inline-flex';btn.textContent=`批量确认 (${checked.length})`}else{btn.style.display='none'}}
+document.getElementById('selectAll').onchange=e=>{const checked=e.target.checked;document.querySelectorAll('.row-check').forEach(cb=>cb.checked=checked);updateBatchButton()};
+document.getElementById('rows').addEventListener('change',e=>{if(e.target.classList.contains('row-check'))updateBatchButton()});
+document.getElementById('batchConfirm').onclick=async()=>{const checked=document.querySelectorAll('.row-check:checked');if(checked.length===0)return;if(!confirm(`确认批量确认 ${checked.length} 条记录？`))return;const ids=Array.from(checked).map(cb=>cb.dataset.id);const r=await fetch('/api/match/batch-confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});const d=await r.json();if(!r.ok){alert(d.error||'批量确认失败');return}alert(`成功确认 ${d.confirmed_count||0} 条记录`);load()}
+for(const btn of document.querySelectorAll('[data-file-mode]'))btn.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();setUploadFileMode(btn.dataset.fileMode)},true);
+document.getElementById('pickStatementFile').onclick=e=>{e.preventDefault();document.getElementById('statementFile').click()};
+</script>
+<script>
+(() => {
+  const zone = document.getElementById('statementDropZone');
+  const input = document.getElementById('statementFile');
+
+  function chooseMode(mode) {
+    setUploadFileMode(mode);
+  }
+
+  zone.addEventListener('click', event => {
+    if (event.target.closest('.file-mode') || event.target.closest('#pickStatementFile')) return;
+    input.click();
+  });
+
+  for (const eventName of ['dragenter', 'dragover']) {
+    zone.addEventListener(eventName, event => {
+      event.preventDefault();
+      event.stopPropagation();
+      zone.classList.add('dragging');
+    });
+  }
+  for (const eventName of ['dragleave', 'drop']) {
+    zone.addEventListener(eventName, event => {
+      event.preventDefault();
+      event.stopPropagation();
+      zone.classList.remove('dragging');
+    });
+  }
+  zone.addEventListener('drop', event => {
+    const file = event.dataTransfer && event.dataTransfer.files[0];
+    if (!file) return;
+    const error = validateUploadFile(file);
+    if (error) {
+      document.getElementById('uploadMsg').textContent = error;
+      return;
+    }
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', {bubbles: true}));
+  });
+})();
+
+function renderEditableRecognition(statementId, rows) {
+  const fields = [
+    ['customer_order_no', 'text'], ['customer_material_no', 'text'],
+    ['delivery_no', 'text'], ['delivery_date', 'text'],
+    ['product_name', 'text'], ['supplier_spec', 'text'],
+    ['quantity', 'number'], ['unit', 'text'],
+    ['tax_inclusive_unit_price', 'number'], ['tax_inclusive_amount', 'number']
+  ];
+  const body = document.getElementById('recognitionRows');
+  const header = document.querySelector('.recognition-table thead tr');
+  if (header && header.firstElementChild?.textContent !== '序号') {
+    header.insertAdjacentHTML('afterbegin', '<th>序号</th>');
+  }
+  const recognitionTab = document.querySelector('.tab[data-tab="recognition"]');
+  if (recognitionTab) recognitionTab.textContent = `对账单识别结果（${rows.length}条）`;
+  body.innerHTML = rows.map((row, index) => {
+    const inputs = fields.map(([field, type]) => {
+      const step = type === 'number' ? ' step="any"' : '';
+      return `<td><input data-field="${field}" type="${type}"${step} value="${esc(row[field] ?? '')}"></td>`;
+    }).join('');
+    const issues = (row.row_issues || []).join('；');
+    return `<tr data-item-id="${row.item_id}"><td class="blueText">${index + 1}</td>${inputs}
+      <td data-role="row-status" class="${row.row_status === 'PASS' ? 'ok' : 'bad'}"
+          title="${esc(issues)}">${row.row_status === 'PASS' ? '可用' : '需修改'}</td>
+      <td><button class="btn secondary" type="button"
+          onclick="saveRecognitionItem('${statementId}', this)">保存</button></td></tr>`;
+  }).join('') || '<tr><td colspan="13" class="muted">暂无对账单识别结果</td></tr>';
+}
+
+async function saveRecognitionItem(statementId, button) {
+  const row = button.closest('tr');
+  const itemId = row.dataset.itemId;
+  const payload = {};
+  row.querySelectorAll('[data-field]').forEach(input => {
+    const apiNames = {
+      customer_material_no: 'customer_material_code',
+      supplier_spec: 'specification',
+      tax_inclusive_unit_price: 'unit_price_incl_tax',
+      tax_inclusive_amount: 'amount_incl_tax'
+    };
+    payload[apiNames[input.dataset.field] || input.dataset.field] = input.value;
+  });
+  button.disabled = true;
+  button.textContent = '保存中';
+  const response = await fetch(`/api/statements/${statementId}/items/${itemId}`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json();
+  button.disabled = false;
+  button.textContent = '保存';
+  if (!response.ok) {
+    alert(data.error || '保存失败');
+    return;
+  }
+  const status = row.querySelector('[data-role="row-status"]');
+  status.textContent = data.row_status === 'PASS' ? '可用' : '需修改';
+  status.className = data.row_status === 'PASS' ? 'ok' : 'bad';
+  status.title = (data.row_issues || []).join('；');
+  await view(statementId);
+  load();
+}
 </script></body></html>

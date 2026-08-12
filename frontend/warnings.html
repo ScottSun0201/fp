@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>超时预警 - LWFP</title>
+  <style>
+    :root{--bg:#f7f9fd;--panel:#fff;--line:#d8dde6;--text:#162033;--muted:#667085;--blue:#3478ff;--soft:#edf3ff;--ok:#0f7a4f;--bad:#b42318;--warn:#b54708}
+    *{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;overflow:hidden}
+    .shell{height:100vh;display:grid;grid-template-columns:224px minmax(0,1fr);gap:24px;padding:24px;overflow:hidden}
+    .side,.panel,.top{background:#fff;border:1px solid var(--line);border-radius:8px}
+    .side{height:calc(100vh - 48px);padding:28px 24px;position:relative;overflow:hidden}
+    .brand{font-size:28px;font-weight:850;color:#2765d8}
+    .sub{color:var(--muted);font-size:13px;margin-top:8px}
+    .menu-title{margin-top:42px;color:var(--muted);font-size:12px}
+    .nav{position:relative;margin-top:14px;padding-left:28px}
+    .nav:before{content:"";position:absolute;left:10px;top:8px;bottom:8px;border-left:2px solid var(--blue)}
+    .nav a{display:block;height:46px;line-height:46px;color:var(--text);text-decoration:none;font-weight:700}
+    .nav a:before{content:"";display:inline-block;width:28px;border-top:2px solid var(--blue);vertical-align:middle;margin:0 10px 0 -18px}
+    .nav a.active{background:var(--soft);color:#2765d8;border-radius:6px;padding-left:8px}
+    .logout{position:absolute;left:32px;right:32px;bottom:32px;height:40px;background:var(--blue);color:#fff;border-radius:6px;text-align:center;line-height:40px;text-decoration:none;font-weight:800}
+    .main{min-width:0;height:calc(100vh - 48px);overflow:auto;padding-right:2px}
+    .top{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 32px}
+    .top h1{font-size:22px;margin:0}
+    .muted{color:var(--muted)}
+    .panel{padding:24px;margin-top:24px}
+    .panel h2{font-size:16px;margin:0 0 18px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border-bottom:1px solid #e4e9f4;padding:12px 10px;text-align:left}
+    th{background:#f2f4f7;color:var(--muted);position:sticky;top:0;z-index:1}
+    .severity-critical{color:#b42318;font-weight:800}
+    .severity-error{color:#b54708;font-weight:800}
+    .severity-warning{color:#b54708;font-weight:700}
+    .badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700}
+    .badge-critical{background:#fee4e2;color:#b42318}
+    .badge-error{background:#fef0c7;color:#b54708}
+    .badge-warning{background:#fef0c7;color:#b54708}
+    .empty{text-align:center;padding:40px;color:var(--muted)}
+    .btn{height:34px;border:0;border-radius:6px;padding:0 13px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+    .btn.secondary{background:var(--soft);color:#2765d8}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">LWFP</div><div class="sub">协议发票对账系统</div>
+    <div class="menu-title">主菜单</div>
+    <nav class="nav"><a href="/">首页</a><a href="/management">对账管理</a><a href="/management?status=ERP_FAILED">异常处理</a><a href="/delivery">快递对账</a><a href="/supplier-summary">供应商统计</a><a href="/warnings" class="active">超时预警</a><a href="/supplier-progress">供应商进度</a></nav>
+    <a class="logout" href="/logout">退出</a>
+  </aside>
+  <main class="main">
+    <section class="top"><h1>超时预警</h1><span class="muted" id="warningCount">共 0 条预警</span></section>
+    <section class="panel">
+      <h2>预警列表</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>严重程度</th>
+            <th>类型</th>
+            <th>预警内容</th>
+            <th>相关ID</th>
+            <th>超时天数</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="warningRows"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+<script>
+const typeText={statement_unmatched:'对账单未匹配',match_unconfirmed:'匹配未确认',reconciliation_unpaid:'对账单未回款'};
+const severityText={critical:'严重',error:'错误',warning:'警告'};
+async function loadWarnings(){
+  try{
+    const r=await fetch('/api/warnings');
+    const d=await r.json();
+    document.getElementById('warningCount').textContent=`共 ${d.warnings?.length||0} 条预警`;
+    if(!d.warnings||d.warnings.length===0){
+      document.getElementById('warningRows').innerHTML='<tr><td colspan="6" class="empty">暂无预警信息</td></tr>';
+      return;
+    }
+    document.getElementById('warningRows').innerHTML=d.warnings.map(w=>{
+      const sevClass=`severity-${w.severity}`;
+      const badgeClass=`badge-${w.severity}`;
+      let action='';
+      if(w.type==='statement_unmatched'){
+        action=`<a href="/management?supplier_code=${encodeURIComponent(w.related_id||'')}" class="btn secondary">查看对账单</a>`;
+      }else if(w.type==='match_unconfirmed'){
+        action=`<a href="/management" class="btn secondary">前往确认</a>`;
+      }else if(w.type==='reconciliation_unpaid'){
+        action=`<a href="/management" class="btn secondary">查看对账单</a>`;
+      }
+      return `<tr>
+        <td><span class="badge ${badgeClass}">${severityText[w.severity]||w.severity}</span></td>
+        <td>${typeText[w.type]||w.type}</td>
+        <td>${w.message||'-'}</td>
+        <td style="font-family:monospace;font-size:12px">${w.related_id||'-'}</td>
+        <td class="${sevClass}">${w.days||0} 天</td>
+        <td>${action}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    console.error('加载预警失败',e);
+    document.getElementById('warningRows').innerHTML='<tr><td colspan="6" class="empty">加载失败</td></tr>';
+  }
+}
+loadWarnings();
+</script>
+</body>
+</html>

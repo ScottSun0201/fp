@@ -20,9 +20,9 @@ RUN mkdir -p /app/uploads
 
 WORKDIR /app/backend
 
-EXPOSE 5050
+EXPOSE 8090
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD curl -f http://localhost:5050/api/health || exit 1
+  CMD curl -f http://localhost:8090/api/health || exit 1
 
 CMD ["python", "app.py"]

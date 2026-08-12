@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>供应商进度 - LWFP</title>
+  <style>
+    :root{--bg:#f7f9fd;--panel:#fff;--line:#d8dde6;--text:#162033;--muted:#667085;--blue:#3478ff;--soft:#edf3ff;--ok:#0f7a4f;--bad:#b42318;--warn:#b54708}
+    *{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;overflow:hidden}
+    .shell{height:100vh;display:grid;grid-template-columns:224px minmax(0,1fr);gap:24px;padding:24px;overflow:hidden}
+    .side,.panel,.top{background:#fff;border:1px solid var(--line);border-radius:8px}
+    .side{height:calc(100vh - 48px);padding:28px 24px;position:relative;overflow:hidden}
+    .brand{font-size:28px;font-weight:850;color:#2765d8}
+    .sub{color:var(--muted);font-size:13px;margin-top:8px}
+    .menu-title{margin-top:42px;color:var(--muted);font-size:12px}
+    .nav{position:relative;margin-top:14px;padding-left:28px}
+    .nav:before{content:"";position:absolute;left:10px;top:8px;bottom:8px;border-left:2px solid var(--blue)}
+    .nav a{display:block;height:46px;line-height:46px;color:var(--text);text-decoration:none;font-weight:700}
+    .nav a:before{content:"";display:inline-block;width:28px;border-top:2px solid var(--blue);vertical-align:middle;margin:0 10px 0 -18px}
+    .nav a.active{background:var(--soft);color:#2765d8;border-radius:6px;padding-left:8px}
+    .logout{position:absolute;left:32px;right:32px;bottom:32px;height:40px;background:var(--blue);color:#fff;border-radius:6px;text-align:center;line-height:40px;text-decoration:none;font-weight:800}
+    .main{min-width:0;height:calc(100vh - 48px);overflow:auto;padding-right:2px}
+    .top{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 32px}
+    .top h1{font-size:22px;margin:0}
+    .muted{color:var(--muted)}
+    .panel{padding:24px;margin-top:24px}
+    .panel h2{font-size:16px;margin:0 0 18px}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:24px}
+    .metric{border:1px solid var(--line);border-radius:6px;padding:16px}
+    .metric span{font-size:12px;color:var(--muted)}
+    .metric strong{display:block;margin-top:8px;font-size:28px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border-bottom:1px solid #e4e9f4;padding:12px 10px;text-align:left}
+    th{background:#f2f4f7;color:var(--muted);position:sticky;top:0;z-index:1}
+    .progress-bar{height:8px;background:#e4e9f4;border-radius:4px;overflow:hidden;position:relative}
+    .progress-fill{height:100%;border-radius:4px;transition:width 0.3s}
+    .rate-good{color:#0f7a4f;font-weight:800}
+    .rate-medium{color:#b54708;font-weight:800}
+    .rate-low{color:#b42318;font-weight:800}
+    .empty{text-align:center;padding:40px;color:var(--muted)}
+    .btn{height:34px;border:0;border-radius:6px;padding:0 13px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+    .btn.secondary{background:var(--soft);color:#2765d8}
+    .sort-btn{cursor:pointer;user-select:none}
+    .sort-btn:hover{color:var(--blue)}
+    .sort-asc::after{content:" ↑"}
+    .sort-desc::after{content:" ↓"}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">LWFP</div><div class="sub">协议发票对账系统</div>
+    <div class="menu-title">主菜单</div>
+    <nav class="nav"><a href="/">首页</a><a href="/management">对账管理</a><a href="/management?status=ERP_FAILED">异常处理</a><a href="/delivery">快递对账</a><a href="/supplier-summary">供应商统计</a><a href="/warnings">超时预警</a><a href="/supplier-progress" class="active">供应商进度</a></nav>
+    <a class="logout" href="/logout">退出</a>
+  </aside>
+  <main class="main">
+    <section class="top"><h1>供应商对账进度</h1><span class="muted" id="supplierCount">共 0 个供应商</span></section>
+    <section class="panel">
+      <div class="summary">
+        <div class="metric"><span>供应商总数</span><strong id="totalSuppliers">0</strong></div>
+        <div class="metric"><span>对账单总数</span><strong id="totalStatements">0</strong></div>
+        <div class="metric"><span>平均完成率</span><strong id="avgCompletion">0%</strong></div>
+        <div class="metric"><span>平均处理天数</span><strong id="avgDays">0</strong></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>供应商明细</h2>
+      <table>
+        <thead>
+          <tr>
+            <th class="sort-btn" data-sort="supplier">供应商</th>
+            <th class="sort-btn" data-sort="statement_count">对账单数</th>
+            <th class="sort-btn" data-sort="total_amount">总金额</th>
+            <th>已匹配</th>
+            <th>建议匹配</th>
+            <th>未匹配</th>
+            <th class="sort-btn" data-sort="completion_rate">完成率</th>
+            <th class="sort-btn" data-sort="avg_days">平均耗时</th>
+            <th>进度</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="supplierRows"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+<script>
+let currentSort='completion_rate';
+let currentOrder='desc';
+let allData=[];
+
+function rateClass(rate){
+  return rate>=80?'rate-good':rate>=50?'rate-medium':'rate-low';
+}
+
+function rateColor(rate){
+  return rate>=80?'#0f7a4f':rate>=50?'#b54708':'#b42318';
+}
+
+function sortData(){
+  allData.sort((a,b)=>{
+    let va=a[currentSort],vb=b[currentSort];
+    if(typeof va==='string')va=va.toLowerCase();
+    if(typeof vb==='string')vb=vb.toLowerCase();
+    if(va<vb)return currentOrder==='asc'?-1:1;
+    if(va>vb)return currentOrder==='asc'?1:-1;
+    return 0;
+  });
+}
+
+function renderTable(){
+  if(allData.length===0){
+    document.getElementById('supplierRows').innerHTML='<tr><td colspan="10" class="empty">暂无供应商数据</td></tr>';
+    return;
+  }
+  document.getElementById('supplierRows').innerHTML=allData.map(s=>{
+    const rate=s.completion_rate||0;
+    const color=rateColor(rate);
+    return `<tr>
+      <td><strong>${s.supplier||'未知供应商'}</strong></td>
+      <td>${s.statement_count||0}</td>
+      <td>${Number(s.total_amount||0).toFixed(2)}</td>
+      <td style="color:#0f7a4f">${s.matched_count||0}</td>
+      <td style="color:#b54708">${s.partial_count||0}</td>
+      <td style="color:#b42318">${s.unmatched_count||0}</td>
+      <td class="${rateClass(rate)}">${rate.toFixed(1)}%</td>
+      <td>${(s.avg_days||0).toFixed(1)} 天</td>
+      <td style="width:120px"><div class="progress-bar"><div class="progress-fill" style="width:${rate}%;background:${color}"></div></div></td>
+      <td><a href="/management?supplier=${encodeURIComponent(s.supplier||'')}" class="btn secondary">查看</a></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateSummary(){
+  const total=allData.length;
+  const totalStatements=allData.reduce((sum,s)=>sum+(s.statement_count||0),0);
+  const avgCompletion=total>0?allData.reduce((sum,s)=>sum+(s.completion_rate||0),0)/total:0;
+  const avgDays=total>0?allData.reduce((sum,s)=>sum+(s.avg_days||0),0)/total:0;
+  
+  document.getElementById('totalSuppliers').textContent=total;
+  document.getElementById('totalStatements').textContent=totalStatements;
+  document.getElementById('avgCompletion').textContent=avgCompletion.toFixed(1)+'%';
+  document.getElementById('avgDays').textContent=avgDays.toFixed(1);
+  document.getElementById('supplierCount').textContent=`共 ${total} 个供应商`;
+}
+
+async function loadSupplierProgress(){
+  try{
+    const r=await fetch('/api/supplier-progress');
+    const d=await r.json();
+    allData=d.data||[];
+    sortData();
+    updateSummary();
+    renderTable();
+  }catch(e){
+    console.error('加载供应商进度失败',e);
+    document.getElementById('supplierRows').innerHTML='<tr><td colspan="10" class="empty">加载失败</td></tr>';
+  }
+}
+
+document.querySelectorAll('.sort-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    const sort=btn.dataset.sort;
+    if(currentSort===sort){
+      currentOrder=currentOrder==='asc'?'desc':'asc';
+    }else{
+      currentSort=sort;
+      currentOrder='desc';
+    }
+    document.querySelectorAll('.sort-btn').forEach(b=>{
+      b.classList.remove('sort-asc','sort-desc');
+    });
+    btn.classList.add(currentOrder==='asc'?'sort-asc':'sort-desc');
+    sortData();
+    renderTable();
+  };
+});
+
+loadSupplierProgress();
+</script>
+</body>
+</html>

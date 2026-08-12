@@ -21,6 +21,19 @@
   </aside>
   <main class="main">
     <section class="top"><h1>首页</h1><span class="muted">管理员 · admin</span></section>
+    <section class="panel" id="warningPanel" style="display:none;background:#fff8e1;border:1px solid #f5c518;padding:16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:24px">⚠️</span>
+          <div>
+            <strong style="font-size:15px;color:#b54708">待处理预警</strong>
+            <span id="warningCount" style="margin-left:8px;color:#b54708;font-weight:800">0</span>
+          </div>
+        </div>
+        <a href="/warnings" class="btn secondary" style="background:#fff;color:#b54708;border:1px solid #f5c518">查看详情</a>
+      </div>
+      <div id="warningList" style="margin-top:12px;font-size:13px;color:#667085"></div>
+    </section>
     <section class="panel">
       <h2>经营概览</h2>
       <div class="grid">
@@ -38,6 +51,13 @@
       <div class="panel"><h2>对账次数累计图</h2><div id="bars" class="bars"></div></div>
       <div class="panel"><h2>待处理摘要</h2><table><tbody id="todoRows"></tbody></table></div>
     </section>
+    <section class="panel" style="margin-top:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h2 style="margin:0">供应商对账进度</h2>
+        <a href="/supplier-progress" class="btn secondary">查看全部</a>
+      </div>
+      <div id="supplierProgressPreview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"></div>
+    </section>
   </main>
 </div>
 <script>
@@ -51,6 +71,8 @@ async function load(){const r=await fetch('/api/dashboard');const d=await r.json
  const trend=d.trend||[];const maxAmt=Math.max(...trend.map(x=>Number(x.amount||0)),1);const pts=trend.map((x,i)=>`${40+i*(600/Math.max(trend.length-1,1))},${190-Number(x.amount||0)/maxAmt*150}`).join(' ');document.getElementById('lineChart').innerHTML=`<line x1="40" y1="190" x2="640" y2="190" stroke="#d8dde6"/><polyline points="${pts}" fill="none" stroke="#3478ff" stroke-width="4"/>`;
  const maxCnt=Math.max(...trend.map(x=>Number(x.count||0)),1);document.getElementById('bars').innerHTML=trend.map((x,i)=>`<div class="bar ${i%2?'':'light'}" style="height:${30+Number(x.count||0)/maxCnt*160}px" title="${x.date} ${x.count}"></div>`).join('');
  document.getElementById('todoRows').innerHTML=['WAITING_INVOICE','ERP_FAILED','INVOICE_FAILED'].map(k=>`<tr><td class="${k==='WAITING_INVOICE'?'blue':k==='ERP_FAILED'?'bad':'warn'}">${statusText[k]}</td><td>${counts[k]||0}</td><td><a href="/management?status=${k}">进入处理</a></td></tr>`).join('');}
-load();
+async function loadWarnings(){try{const r=await fetch('/api/warnings');const d=await r.json();if(d.warnings&&d.warnings.length>0){document.getElementById('warningPanel').style.display='block';document.getElementById('warningCount').textContent=d.warnings.length;const items=d.warnings.slice(0,3).map(w=>`<div style="margin-top:6px"><span style="color:${w.severity==='critical'?'#b42318':w.severity==='error'?'#b54708':'#b54708'}">●</span> ${w.message}</div>`).join('');document.getElementById('warningList').innerHTML=items+(d.warnings.length>3?`<div style="margin-top:6px;color:#2765d8">...还有 ${d.warnings.length-3} 条预警</div>`:'');}else{document.getElementById('warningPanel').style.display='none'}}catch(e){console.error('加载预警失败',e)}}
+async function loadSupplierProgress(){try{const r=await fetch('/api/supplier-progress');const d=await r.json();if(d.data&&d.data.length>0){const top3=d.data.slice(0,3);document.getElementById('supplierProgressPreview').innerHTML=top3.map(s=>{const rate=s.completion_rate||0;const color=rate>=80?'#0f7a4f':rate>=50?'#b54708':'#b42318';return `<div style="border:1px solid #e4e9f4;border-radius:8px;padding:14px;background:#fff"><div style="font-weight:800;font-size:15px;margin-bottom:8px">${s.supplier||'未知供应商'}</div><div style="font-size:13px;color:#667085;line-height:1.8"><div>对账单数：<strong>${s.statement_count}</strong></div><div>总金额：<strong>${Number(s.total_amount||0).toFixed(2)}</strong></div><div>完成率：<strong style="color:${color}">${rate.toFixed(1)}%</strong></div><div>平均耗时：<strong>${(s.avg_days||0).toFixed(1)}天</strong></div></div><div style="margin-top:10px;height:6px;background:#e4e9f4;border-radius:3px;overflow:hidden"><div style="height:100%;width:${rate}%;background:${color}"></div></div></div>`}).join('');}else{document.getElementById('supplierProgressPreview').innerHTML='<div class="muted" style="grid-column:1/-1;text-align:center;padding:20px">暂无供应商数据</div>'}}catch(e){console.error('加载供应商进度失败',e)}}
+load();loadWarnings();loadSupplierProgress();
 </script>
 </body></html>

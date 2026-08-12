@@ -3,12 +3,11 @@
 数据库模型与初始化
 REQ-022/031/032/033/036 全部表结构
 """
-import sqlite3
 import json
 import re
 from datetime import datetime
 from contextlib import contextmanager
-from config import DB_ENGINE, DB_PATH, MYSQL_CONFIG
+from config import DB_ENGINE, MYSQL_CONFIG
 
 
 class DbRow(dict):
@@ -23,6 +22,7 @@ class DbCursor:
     def __init__(self, cursor):
         self.cursor = cursor
         self.lastrowid = cursor.lastrowid
+        self.rowcount = cursor.rowcount
 
     def fetchone(self):
         row = self.cursor.fetchone()
@@ -101,14 +101,33 @@ def init_db():
         _ensure_column(conn, 'stm_statement', 'invoice_raw_text', 'TEXT')
         _ensure_column(conn, 'stm_statement', 'usage_remark', 'TEXT')
         _ensure_column(conn, 'stm_statement', 'payment_date', 'TEXT')
+        _ensure_column(conn, 'stm_statement', 'statement_fingerprint', 'TEXT')
+        _ensure_column(conn, 'stm_statement', 'recognition_metadata', 'LONGTEXT')
         if DB_ENGINE == 'mysql':
-            _drop_index(conn, 'stm_statement', 'idx_stm_supplier_period_unique')
-        else:
-            conn.execute("""
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_stm_supplier_period_unique
-                ON stm_statement(supplier_code, statement_period)
-                WHERE supplier_code IS NOT NULL AND supplier_code <> ''
-            """)
+            # 识别元数据包含动态列映射及逐行错误，VARCHAR(255) 无法容纳真实单据。
+            conn.execute(
+                "ALTER TABLE stm_statement "
+                "MODIFY COLUMN recognition_metadata LONGTEXT NULL"
+            )
+            # OCR 解析可能返回超长客户/供应商名称，扩大列宽防止 1406 错误
+            conn.execute(
+                "ALTER TABLE stm_statement "
+                "MODIFY COLUMN customer_name VARCHAR(512) NOT NULL"
+            )
+            conn.execute(
+                "ALTER TABLE stm_statement "
+                "MODIFY COLUMN supplier_name VARCHAR(512) NOT NULL"
+            )
+        _ensure_column(conn, 'stm_statement_item', 'specification', 'TEXT')
+        _ensure_index(
+            conn,
+            'stm_statement',
+            'idx_stm_supplier_period_unique',
+            """
+            CREATE UNIQUE INDEX idx_stm_supplier_period_unique
+            ON stm_statement(supplier_code, statement_period)
+            """,
+        )
         # 插入默认管理员
         import bcrypt
         pw_hash = bcrypt.hashpw(b'admin123', bcrypt.gensalt(rounds=12)).decode()
@@ -181,6 +200,7 @@ def init_db():
                 title TEXT NOT NULL,
                 record_type TEXT NOT NULL DEFAULT 'text',
                 record_date TEXT,
+                amount REAL DEFAULT 0,
                 text_content TEXT,
                 file_path TEXT,
                 file_name TEXT,
@@ -194,6 +214,7 @@ def init_db():
                 title VARCHAR(255) NOT NULL,
                 record_type VARCHAR(64) NOT NULL DEFAULT 'text',
                 record_date VARCHAR(64),
+                amount REAL DEFAULT 0,
                 text_content TEXT,
                 file_path VARCHAR(1024),
                 file_name VARCHAR(255),
@@ -201,6 +222,80 @@ def init_db():
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 KEY idx_statement_record_statement (statement_id),
                 KEY idx_statement_record_created (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+        _ensure_column(conn, 'stm_statement_record', 'amount', 'REAL DEFAULT 0')
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS stm_statement_allocation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                statement_id INTEGER NOT NULL,
+                statement_item_id INTEGER NOT NULL,
+                supplier_code TEXT,
+                supplier_name TEXT,
+                line_key TEXT NOT NULL,
+                purchase_order_id TEXT,
+                material_code TEXT,
+                delivery_date TEXT,
+                unit_price REAL DEFAULT 0,
+                current_quantity REAL DEFAULT 0,
+                current_amount REAL DEFAULT 0,
+                historical_quantity REAL DEFAULT 0,
+                historical_amount REAL DEFAULT 0,
+                cumulative_quantity REAL DEFAULT 0,
+                cumulative_amount REAL DEFAULT 0,
+                erp_quantity REAL DEFAULT 0,
+                erp_amount REAL DEFAULT 0,
+                remaining_quantity REAL DEFAULT 0,
+                remaining_amount REAL DEFAULT 0,
+                allocation_status TEXT NOT NULL DEFAULT 'INFO',
+                issue_text TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            )
+        """ if DB_ENGINE != 'mysql' else """
+            CREATE TABLE IF NOT EXISTS stm_statement_allocation (
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                statement_id INTEGER NOT NULL,
+                statement_item_id INTEGER NOT NULL,
+                supplier_code VARCHAR(255),
+                supplier_name VARCHAR(255),
+                line_key VARCHAR(128) NOT NULL,
+                purchase_order_id VARCHAR(255),
+                material_code VARCHAR(255),
+                delivery_date VARCHAR(64),
+                unit_price REAL DEFAULT 0,
+                current_quantity REAL DEFAULT 0,
+                current_amount REAL DEFAULT 0,
+                historical_quantity REAL DEFAULT 0,
+                historical_amount REAL DEFAULT 0,
+                cumulative_quantity REAL DEFAULT 0,
+                cumulative_amount REAL DEFAULT 0,
+                erp_quantity REAL DEFAULT 0,
+                erp_amount REAL DEFAULT 0,
+                remaining_quantity REAL DEFAULT 0,
+                remaining_amount REAL DEFAULT 0,
+                allocation_status VARCHAR(64) NOT NULL DEFAULT 'INFO',
+                issue_text TEXT,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                KEY idx_alloc_statement (statement_id),
+                KEY idx_alloc_line_key (line_key),
+                KEY idx_alloc_supplier (supplier_code)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+        if DB_ENGINE != 'mysql':
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_alloc_statement ON stm_statement_allocation(statement_id)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_alloc_line_key ON stm_statement_allocation(line_key)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_alloc_supplier ON stm_statement_allocation(supplier_code)")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS stm_statement_line_override (
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                statement_id INTEGER NOT NULL,
+                statement_item_id INTEGER NOT NULL,
+                override_type VARCHAR(64) NOT NULL,
+                reason TEXT,
+                approved_by VARCHAR(255),
+                approved_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_statement_line_override (statement_id, statement_item_id),
+                KEY idx_line_override_statement (statement_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
 
@@ -259,258 +354,6 @@ def _mysql_sql(sql):
 
 def _split_sql(sql):
     return [part.strip() for part in sql.split(';') if part.strip()]
-
-
-SCHEMA_SQL = """
--- ═══ 用户表 ═══
-CREATE TABLE IF NOT EXISTS sys_user (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    username        TEXT NOT NULL UNIQUE,
-    password_hash   TEXT NOT NULL,
-    real_name       TEXT NOT NULL DEFAULT '',
-    role            TEXT NOT NULL DEFAULT 'finance_staff'
-                    CHECK(role IN ('admin','finance_manager','finance_staff','sales','viewer')),
-    is_active       INTEGER NOT NULL DEFAULT 1,
-    login_attempts  INTEGER NOT NULL DEFAULT 0,
-    locked_until    TEXT,
-    created_at      TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-
--- ═══ 企业信息表 ═══
-CREATE TABLE IF NOT EXISTS sys_enterprise (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    enterprise_name TEXT NOT NULL,
-    tax_id          TEXT UNIQUE,
-    address         TEXT,
-    phone           TEXT,
-    bank_name       TEXT,
-    bank_account    TEXT,
-    seal_number     TEXT,
-    enterprise_type TEXT NOT NULL DEFAULT 'both'
-                    CHECK(enterprise_type IN ('customer','supplier','both')),
-    contact_person  TEXT,
-    created_at      TEXT NOT NULL DEFAULT (datetime('now','localtime')),
-    updated_at      TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-
--- ═══ 产品物料表 ═══
-CREATE TABLE IF NOT EXISTS sys_material (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    material_code   TEXT NOT NULL UNIQUE,
-    material_name   TEXT NOT NULL,
-    category        TEXT,
-    specification   TEXT,
-    unit            TEXT NOT NULL DEFAULT 'PCS',
-    tax_rate        REAL NOT NULL DEFAULT 13.0,
-    is_active       INTEGER NOT NULL DEFAULT 1,
-    created_at      TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-
--- ═══ 料号映射表 REQ-033 ═══
-CREATE TABLE IF NOT EXISTS sys_material_mapping (
-    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
-    enterprise_id           INTEGER REFERENCES sys_enterprise(id),
-    customer_material_code  TEXT NOT NULL,
-    supplier_material_code  TEXT NOT NULL,
-    customer_name           TEXT,
-    supplier_name           TEXT,
-    spec                    TEXT,
-    unit                    TEXT DEFAULT 'PCS',
-    tax_rate                TEXT DEFAULT '13%',
-    created_at              TEXT NOT NULL DEFAULT (datetime('now','localtime')),
-    UNIQUE(customer_material_code, supplier_material_code)
-);
-CREATE INDEX IF NOT EXISTS idx_mm_customer ON sys_material_mapping(customer_material_code);
-CREATE INDEX IF NOT EXISTS idx_mm_supplier ON sys_material_mapping(supplier_material_code);
-
--- ═══ 发票主表 ═══
-CREATE TABLE IF NOT EXISTS inv_invoice (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    invoice_number      TEXT UNIQUE,
-    invoice_date        TEXT,
-    invoice_type        TEXT NOT NULL DEFAULT 'VAT_SPECIAL'
-                        CHECK(invoice_type IN ('VAT_SPECIAL','VAT_NORMAL')),
-    buyer_name          TEXT,
-    buyer_tax_id        TEXT,
-    seller_name         TEXT,
-    seller_tax_id       TEXT,
-    total_amount_excl   REAL NOT NULL DEFAULT 0,
-    total_tax           REAL NOT NULL DEFAULT 0,
-    total_amount_incl   REAL NOT NULL DEFAULT 0,
-    amount_capital      TEXT,
-    status              TEXT NOT NULL DEFAULT 'normal'
-                        CHECK(status IN ('normal','red_rushed','cancelled')),
-    original_invoice_id INTEGER REFERENCES inv_invoice(id),
-    source              TEXT NOT NULL DEFAULT 'manual'
-                        CHECK(source IN ('manual','ocr','api')),
-    pdf_path            TEXT,
-    remark              TEXT,
-    created_by          INTEGER REFERENCES sys_user(id),
-    created_at          TEXT NOT NULL DEFAULT (datetime('now','localtime')),
-    updated_at          TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_inv_date ON inv_invoice(invoice_date);
-CREATE INDEX IF NOT EXISTS idx_inv_status ON inv_invoice(status);
-
--- ═══ 发票明细行 ═══
-CREATE TABLE IF NOT EXISTS inv_invoice_item (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    invoice_id          INTEGER NOT NULL REFERENCES inv_invoice(id) ON DELETE CASCADE,
-    line_number         INTEGER NOT NULL,
-    category_prefix     TEXT,
-    material_name       TEXT NOT NULL,
-    specification       TEXT,
-    unit                TEXT NOT NULL,
-    quantity            REAL NOT NULL,
-    unit_price_excl     REAL NOT NULL,
-    amount_excl         REAL NOT NULL,
-    tax_rate            REAL NOT NULL DEFAULT 13.0,
-    tax_amount          REAL NOT NULL DEFAULT 0,
-    material_id         INTEGER REFERENCES sys_material(id)
-);
-CREATE INDEX IF NOT EXISTS idx_inv_item_inv ON inv_invoice_item(invoice_id);
-
--- ═══ 对账单主表 REQ-032 ═══
-CREATE TABLE IF NOT EXISTS stm_statement (
-    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
-    statement_period        TEXT NOT NULL,
-    statement_date          TEXT,
-    customer_name           TEXT NOT NULL,
-    customer_tax_id         TEXT,
-    supplier_code           TEXT,
-    statement_key           TEXT,
-    supplier_name           TEXT NOT NULL,
-    supplier_tax_id         TEXT,
-    settlement_days         INTEGER NOT NULL DEFAULT 30,
-    opening_balance         REAL NOT NULL DEFAULT 0,
-    current_payment         REAL NOT NULL DEFAULT 0,
-    closing_balance         REAL NOT NULL DEFAULT 0,
-    delivered_unpaid        REAL NOT NULL DEFAULT 0,
-    total_invoice_amount    REAL NOT NULL DEFAULT 0,
-    total_quantity          INTEGER NOT NULL DEFAULT 0,
-    status                  TEXT NOT NULL DEFAULT 'draft'
-                            CHECK(status IN ('draft','pending_review','pending_customer','confirmed','archived')),
-    prepared_by             INTEGER REFERENCES sys_user(id),
-    reviewed_by             INTEGER REFERENCES sys_user(id),
-    confirmed_by            INTEGER REFERENCES sys_user(id),
-    confirmed_at            TEXT,
-    pdf_path                TEXT,
-    balance_status          TEXT DEFAULT 'balanced'
-                            CHECK(balance_status IN ('balanced','unbalanced')),
-    source_file             TEXT,
-    version                 INTEGER NOT NULL DEFAULT 1,
-    created_at              TEXT NOT NULL DEFAULT (datetime('now','localtime')),
-    updated_at              TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_stm_period ON stm_statement(statement_period);
-CREATE INDEX IF NOT EXISTS idx_stm_customer ON stm_statement(customer_name);
-
--- ═══ 对账单明细行 ═══
-CREATE TABLE IF NOT EXISTS stm_statement_item (
-    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
-    statement_id            INTEGER NOT NULL REFERENCES stm_statement(id) ON DELETE CASCADE,
-    seq                     INTEGER NOT NULL,
-    customer_order_no       TEXT,
-    customer_material_code  TEXT,
-    delivery_no             TEXT,
-    delivery_date           TEXT,
-    product_name            TEXT NOT NULL,
-    quantity                REAL NOT NULL,
-    unit                    TEXT NOT NULL DEFAULT 'PCS',
-    unit_price_incl_tax     REAL NOT NULL,
-    amount_incl_tax         REAL NOT NULL,
-    material_id             INTEGER REFERENCES sys_material(id)
-);
-CREATE INDEX IF NOT EXISTS idx_stm_item_stm ON stm_statement_item(statement_id);
-
--- ═══ 回款记录表 REQ-036 ═══
-CREATE TABLE IF NOT EXISTS stm_payment (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    statement_id    INTEGER REFERENCES stm_statement(id),
-    invoice_id      INTEGER REFERENCES inv_invoice(id),
-    payment_date    TEXT NOT NULL,
-    amount          REAL NOT NULL,
-    payment_method  TEXT NOT NULL DEFAULT 'bank_transfer'
-                    CHECK(payment_method IN ('bank_transfer','acceptance_bill','cash','other')),
-    bill_number     TEXT,
-    bill_maturity   TEXT,
-    bank_ref_no     TEXT,
-    remark          TEXT,
-    created_by      INTEGER REFERENCES sys_user(id),
-    created_at      TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_pay_stm ON stm_payment(statement_id);
-CREATE INDEX IF NOT EXISTS idx_pay_date ON stm_payment(payment_date);
-
--- ═══ 对账核销/匹配表 REQ-025 ═══
-CREATE TABLE IF NOT EXISTS rcn_reconciliation (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    invoice_id          INTEGER REFERENCES inv_invoice(id),
-    statement_id        INTEGER REFERENCES stm_statement(id),
-    invoice_item_id     INTEGER REFERENCES inv_invoice_item(id),
-    statement_item_id   INTEGER REFERENCES stm_statement_item(id),
-    match_type          TEXT NOT NULL DEFAULT 'auto'
-                        CHECK(match_type IN ('auto','manual')),
-    match_score         REAL,
-    amount_score        REAL,
-    material_score      REAL,
-    quantity_score      REAL,
-    date_score          REAL,
-    match_level         TEXT DEFAULT 'unmatched'
-                        CHECK(match_level IN ('full','partial','unmatched')),
-    difference_amount   REAL DEFAULT 0,
-    difference_reason   TEXT,
-    is_confirmed        INTEGER NOT NULL DEFAULT 0,
-    confirmed_by        TEXT,
-    created_at          TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_rcn_inv ON rcn_reconciliation(invoice_id);
-CREATE INDEX IF NOT EXISTS idx_rcn_stm ON rcn_reconciliation(statement_id);
-
--- ═══ 异常记录表 REQ-029 ═══
-CREATE TABLE IF NOT EXISTS sys_anomaly (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    anomaly_type    TEXT NOT NULL
-                    CHECK(anomaly_type IN ('amount_mismatch','overdue','parse_error','missing_items','duplicate','unmatched')),
-    ref_type        TEXT NOT NULL CHECK(ref_type IN ('invoice','statement','payment','match')),
-    ref_id          INTEGER,
-    description     TEXT NOT NULL,
-    severity        TEXT NOT NULL DEFAULT 'warning'
-                    CHECK(severity IN ('info','warning','error','critical')),
-    status          TEXT NOT NULL DEFAULT 'open'
-                    CHECK(status IN ('open','resolved','ignored')),
-    resolved_at     TEXT,
-    resolved_by     INTEGER REFERENCES sys_user(id),
-    created_at      TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_anom_status ON sys_anomaly(status);
-CREATE INDEX IF NOT EXISTS idx_anom_type ON sys_anomaly(anomaly_type);
-
--- ═══ 审计日志 ═══
-CREATE TABLE IF NOT EXISTS sys_audit_log (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id         INTEGER REFERENCES sys_user(id),
-    username        TEXT,
-    action          TEXT NOT NULL CHECK(action IN ('CREATE','UPDATE','DELETE','EXPORT','LOGIN','LOGOUT','MATCH')),
-    target_type     TEXT,
-    target_id       INTEGER,
-    old_values      TEXT,
-    new_values      TEXT,
-    ip_address      TEXT,
-    created_at      TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-CREATE INDEX IF NOT EXISTS idx_audit_user ON sys_audit_log(user_id);
-CREATE INDEX IF NOT EXISTS idx_audit_action ON sys_audit_log(action);
-
--- ═══ 系统配置 ═══
-CREATE TABLE IF NOT EXISTS sys_config (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    config_key      TEXT NOT NULL UNIQUE,
-    config_value    TEXT NOT NULL,
-    description     TEXT,
-    updated_at      TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-);
-"""
 
 
 MYSQL_SCHEMA_SQL = """
@@ -615,11 +458,11 @@ CREATE TABLE IF NOT EXISTS stm_statement (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     statement_period VARCHAR(64) NOT NULL,
     statement_date VARCHAR(64),
-    customer_name VARCHAR(255) NOT NULL,
+    customer_name VARCHAR(512) NOT NULL,
     customer_tax_id VARCHAR(255),
     supplier_code VARCHAR(255),
     statement_key VARCHAR(255),
-    supplier_name VARCHAR(255) NOT NULL,
+    supplier_name VARCHAR(512) NOT NULL,
     supplier_tax_id VARCHAR(255),
     settlement_days INTEGER NOT NULL DEFAULT 30,
     opening_balance REAL NOT NULL DEFAULT 0,
@@ -652,6 +495,7 @@ CREATE TABLE IF NOT EXISTS stm_statement_item (
     delivery_no VARCHAR(255),
     delivery_date VARCHAR(64),
     product_name VARCHAR(255) NOT NULL,
+    specification VARCHAR(255),
     quantity REAL NOT NULL,
     unit VARCHAR(64) NOT NULL DEFAULT 'PCS',
     unit_price_incl_tax REAL NOT NULL,

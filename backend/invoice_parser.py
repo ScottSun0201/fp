@@ -4,8 +4,8 @@
 REQ-004/005/006/013: 增值税电子发票全字段解析
 """
 import re
-import pdfplumber
 from config import DEFAULT_TAX_RATE
+from qwen_ocr import recognize_pdf as recognize_pdf_with_qwen
 
 
 def parse_invoice_pdf(pdf_path: str) -> dict:
@@ -29,6 +29,12 @@ def parse_invoice_pdf(pdf_path: str) -> dict:
     }
 
     try:
+        import pdfplumber
+    except Exception as e:
+        result['errors'].append(f'PDF识别依赖不可用: {str(e)}')
+        return result
+
+    try:
         with pdfplumber.open(pdf_path) as pdf:
             all_text = ''
             for page in pdf.pages:
@@ -38,7 +44,11 @@ def parse_invoice_pdf(pdf_path: str) -> dict:
             result['raw_text'] = all_text
 
             if not all_text.strip():
-                result['errors'].append('PDF无可提取文本（可能是扫描件）')
+                qwen_data = recognize_pdf_with_qwen(pdf_path, 'invoice')
+                if not qwen_data:
+                    result['errors'].append('PDF无可提取文本（可能是扫描件）')
+                    return result
+                _merge_qwen_invoice(result, qwen_data)
                 return result
 
             # ── 发票号码 ──
@@ -117,6 +127,48 @@ def parse_invoice_pdf(pdf_path: str) -> dict:
     except Exception as e:
         result['errors'].append(f'PDF解析异常: {str(e)}')
         return result
+
+
+def _number(value, default=0.0):
+    try:
+        return float(str(value).replace(',', '').replace('%', '').strip())
+    except (TypeError, ValueError):
+        return default
+
+
+def _merge_qwen_invoice(result: dict, data: dict) -> None:
+    for key in (
+        'invoice_number', 'invoice_date', 'invoice_type', 'buyer_name',
+        'buyer_tax_id', 'seller_name', 'seller_tax_id', 'amount_capital',
+    ):
+        if data.get(key) not in (None, ''):
+            result[key] = str(data[key]).strip()
+    for key in ('total_amount_excl', 'total_tax', 'total_amount_incl'):
+        result[key] = _number(data.get(key))
+    items = []
+    for source in data.get('items') or []:
+        amount = _number(source.get('amount_excl'))
+        tax_rate = _number(source.get('tax_rate'), DEFAULT_TAX_RATE)
+        tax_amount = _number(source.get('tax_amount'))
+        if not tax_amount and amount:
+            tax_amount = round(amount * tax_rate / 100, 2)
+        items.append({
+            'category_prefix': str(source.get('category_prefix') or ''),
+            'material_name': str(source.get('material_name') or ''),
+            'specification': str(source.get('specification') or ''),
+            'unit': str(source.get('unit') or ''),
+            'quantity': _number(source.get('quantity')),
+            'unit_price_excl': _number(source.get('unit_price_excl')),
+            'amount_excl': amount,
+            'tax_rate': tax_rate,
+            'tax_amount': tax_amount,
+        })
+    result['items'] = items
+    result['raw_text'] = data.get('raw_text', '')
+    if not result['total_amount_incl']:
+        result['total_amount_incl'] = round(
+            result['total_amount_excl'] + result['total_tax'], 2
+        )
 
 
 def _parse_item_line(line: str) -> dict:
