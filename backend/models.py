@@ -66,13 +66,7 @@ class MysqlCompatConnection:
 @contextmanager
 def get_db():
     """上下文管理器获取数据库连接"""
-    if DB_ENGINE == 'mysql':
-        conn = MysqlCompatConnection()
-    else:
-        conn = sqlite3.connect(str(DB_PATH))
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=DELETE")
-        conn.execute("PRAGMA foreign_keys=ON")
+    conn = MysqlCompatConnection()
     try:
         yield conn
         conn.commit()
@@ -86,7 +80,7 @@ def get_db():
 def init_db():
     """初始化所有表"""
     with get_db() as conn:
-        conn.executescript(MYSQL_SCHEMA_SQL if DB_ENGINE == 'mysql' else SCHEMA_SQL)
+        conn.executescript(MYSQL_SCHEMA_SQL)
         _ensure_column(conn, 'stm_statement', 'supplier_code', 'TEXT')
         _ensure_column(conn, 'stm_statement', 'statement_key', 'TEXT')
         _ensure_column(conn, 'stm_statement', 'statement_no', 'TEXT')
@@ -154,23 +148,6 @@ def init_db():
             """, (key, val, desc))
         conn.execute("""
             CREATE TABLE IF NOT EXISTS delivery_reconciliation_run (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                unique_key TEXT,
-                courier_company TEXT,
-                fill_date TEXT,
-                statement_month TEXT NOT NULL,
-                original_filename TEXT NOT NULL,
-                file_hash TEXT,
-                statement_count INTEGER NOT NULL DEFAULT 0,
-                matched_count INTEGER NOT NULL DEFAULT 0,
-                only_statement_count INTEGER NOT NULL DEFAULT 0,
-                only_system_count INTEGER NOT NULL DEFAULT 0,
-                result_path TEXT,
-                created_by TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-            )
-        """ if DB_ENGINE != 'mysql' else """
-            CREATE TABLE IF NOT EXISTS delivery_reconciliation_run (
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 unique_key VARCHAR(255),
                 courier_company VARCHAR(255),
@@ -195,20 +172,6 @@ def init_db():
         _ensure_column(conn, 'delivery_reconciliation_run', 'fill_date', 'TEXT')
         conn.execute("""
             CREATE TABLE IF NOT EXISTS stm_statement_record (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                statement_id INTEGER NOT NULL,
-                title TEXT NOT NULL,
-                record_type TEXT NOT NULL DEFAULT 'text',
-                record_date TEXT,
-                amount REAL DEFAULT 0,
-                text_content TEXT,
-                file_path TEXT,
-                file_name TEXT,
-                created_by TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-            )
-        """ if DB_ENGINE != 'mysql' else """
-            CREATE TABLE IF NOT EXISTS stm_statement_record (
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 statement_id INTEGER NOT NULL,
                 title VARCHAR(255) NOT NULL,
@@ -226,32 +189,6 @@ def init_db():
         """)
         _ensure_column(conn, 'stm_statement_record', 'amount', 'REAL DEFAULT 0')
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS stm_statement_allocation (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                statement_id INTEGER NOT NULL,
-                statement_item_id INTEGER NOT NULL,
-                supplier_code TEXT,
-                supplier_name TEXT,
-                line_key TEXT NOT NULL,
-                purchase_order_id TEXT,
-                material_code TEXT,
-                delivery_date TEXT,
-                unit_price REAL DEFAULT 0,
-                current_quantity REAL DEFAULT 0,
-                current_amount REAL DEFAULT 0,
-                historical_quantity REAL DEFAULT 0,
-                historical_amount REAL DEFAULT 0,
-                cumulative_quantity REAL DEFAULT 0,
-                cumulative_amount REAL DEFAULT 0,
-                erp_quantity REAL DEFAULT 0,
-                erp_amount REAL DEFAULT 0,
-                remaining_quantity REAL DEFAULT 0,
-                remaining_amount REAL DEFAULT 0,
-                allocation_status TEXT NOT NULL DEFAULT 'INFO',
-                issue_text TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
-            )
-        """ if DB_ENGINE != 'mysql' else """
             CREATE TABLE IF NOT EXISTS stm_statement_allocation (
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 statement_id INTEGER NOT NULL,
@@ -281,10 +218,6 @@ def init_db():
                 KEY idx_alloc_supplier (supplier_code)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
-        if DB_ENGINE != 'mysql':
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_alloc_statement ON stm_statement_allocation(statement_id)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_alloc_line_key ON stm_statement_allocation(line_key)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_alloc_supplier ON stm_statement_allocation(supplier_code)")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS stm_statement_line_override (
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
