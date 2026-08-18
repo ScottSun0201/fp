@@ -231,6 +231,35 @@ def init_db():
                 KEY idx_line_override_statement (statement_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
+        # 差异工单表：把每一笔"对不上"变成一张可跟踪的工单（闭环核心）
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS stm_diff_ticket (
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                statement_id INTEGER NOT NULL,
+                statement_item_id INTEGER,
+                supplier_code VARCHAR(255),
+                supplier_name VARCHAR(255),
+                line_key VARCHAR(128),
+                material_code VARCHAR(255),
+                purchase_order_id VARCHAR(255),
+                delivery_date VARCHAR(64),
+                diff_type VARCHAR(64) NOT NULL DEFAULT 'OTHER',
+                diff_amount REAL DEFAULT 0,
+                issue_text TEXT,
+                status VARCHAR(32) NOT NULL DEFAULT 'OPEN',
+                action_type VARCHAR(64),
+                action_note TEXT,
+                assignee VARCHAR(255),
+                source_period VARCHAR(64),
+                is_carried_forward INTEGER NOT NULL DEFAULT 0,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                resolved_at DATETIME,
+                KEY idx_diff_statement (statement_id),
+                KEY idx_diff_supplier_period (supplier_code, source_period),
+                KEY idx_diff_status (status)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
 
     print("✅ 数据库初始化完成")
 

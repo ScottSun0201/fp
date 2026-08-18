@@ -889,6 +889,11 @@ def _sync_statement_allocations(conn, stmt_id):
         return
     stmt = dict(stmt)
     conn.execute("DELETE FROM stm_statement_allocation WHERE statement_id=?", (stmt_id,))
+    # 同步清理该对账单的差异工单（保留跨月带入的工单）
+    conn.execute(
+        "DELETE FROM stm_diff_ticket WHERE statement_id=? AND is_carried_forward=0",
+        (stmt_id,),
+    )
     items = conn.execute(
         "SELECT * FROM stm_statement_item WHERE statement_id=? ORDER BY seq", (stmt_id,)
     ).fetchall()
